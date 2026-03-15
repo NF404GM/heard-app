@@ -1038,11 +1038,13 @@ img { display: block; max-width: 100%; }
 }
 .card-detail-overlay.show { opacity: 1; pointer-events: all; }
 .card-detail-overlay .card-detail-container {
-  transform: scale(0.92) translateY(12px);
-  transition: transform var(--dur-medium) var(--ease-spring);
+  transform: scale(0.85) translateY(24px);
+  opacity: 0;
+  transition: transform var(--dur-medium) var(--ease-spring), opacity var(--dur-small) var(--ease-standard);
 }
 .card-detail-overlay.show .card-detail-container {
   transform: scale(1) translateY(0);
+  opacity: 1;
 }
 .card-detail-close {
   position: absolute;
@@ -1080,6 +1082,7 @@ img { display: block; max-width: 100%; }
   max-height: clamp(420px, 75vh, 560px);
   position: relative;
   cursor: pointer;
+  perspective: 1200px;
 }
 @media (min-width: 414px) {
   .card-detail-container { width: clamp(300px, 82vw, 360px); }
@@ -1095,6 +1098,11 @@ img { display: block; max-width: 100%; }
   height: 100%;
   position: relative;
   transform-origin: center center;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-medium) var(--ease-spring);
+}
+.card-detail-inner.flipped {
+  transform: rotateY(180deg);
 }
 .card-detail-face {
   position: absolute;
@@ -1102,23 +1110,15 @@ img { display: block; max-width: 100%; }
   border-radius: var(--radius-card);
   overflow: hidden;
   box-shadow: var(--shadow-lift);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .card-detail-front {
   display: flex;
   flex-direction: column;
   z-index: 2;
-  opacity: 1;
-  pointer-events: auto;
-}
-.card-detail-inner.flipped .card-detail-front {
-  z-index: 1;
-  opacity: 0;
-  pointer-events: none;
-}
-.card-detail-inner.flipped .card-detail-back {
-  z-index: 2;
-  opacity: 1;
-  pointer-events: auto;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .card-detail-front-art {
   width: 100%;
@@ -1212,11 +1212,12 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 1;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .card-back-header {
+  position: relative;
   padding: var(--space-4) var(--space-5) var(--space-3);
   flex-shrink: 0;
   border-bottom: 1px solid var(--color-border-subtle);
@@ -2710,6 +2711,137 @@ img { display: block; max-width: 100%; }
 .create-deck-modal-overlay.show .create-deck-modal-sheet {
   transform: translateY(0);
 }
+
+/* ═══ SETTINGS MODAL ═══ */
+.settings-gear-btn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--dur-micro) var(--ease-micro), background var(--dur-micro) var(--ease-micro);
+  z-index: 5;
+}
+.settings-gear-btn:hover { color: var(--color-text-primary); background: rgba(255,255,255,0.06); }
+.settings-gear-btn:active { transform: scale(0.92); }
+.settings-gear-btn svg { width: 22px; height: 22px; }
+
+.settings-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14,14,16,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms var(--ease-micro);
+}
+.settings-modal-overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+.settings-modal-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: var(--space-4) var(--space-5) var(--space-8);
+  z-index: 501;
+  transform: translateY(100%);
+  transition: transform var(--dur-medium) var(--ease-spring);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.settings-modal-overlay.show .settings-modal-sheet {
+  transform: translateY(0);
+}
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+.settings-modal-header .settings-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semi);
+}
+.settings-modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.settings-modal-close:active { transform: scale(0.9); }
+.settings-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+}
+.settings-modal-item .label {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+}
+.settings-modal-item.destructive .label {
+  color: var(--color-destructive);
+}
+.settings-modal-item input,
+.settings-modal-item select {
+  background: var(--color-surface-raised);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+.settings-modal-version {
+  text-align: center;
+  padding: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* ═══ FLIP-BACK BUTTON ═══ */
+.flip-back-btn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-micro), transform var(--dur-micro) var(--ease-micro);
+}
+.flip-back-btn:hover { background: rgba(255,255,255,0.15); }
+.flip-back-btn:active { transform: scale(0.88); }
+
 .modal-handle {
   width: 36px;
   height: 4px;
@@ -3379,12 +3511,15 @@ img { display: block; max-width: 100%; }
 
     <!-- Profile Tab -->
     <div id="tab-profile" class="tab-content">
-      <div class="profile-header">
+      <div class="profile-header" style="position:relative;">
         <div class="profile-wordmark">
 <img src="heard-drive-lockup.png" alt="heard." style="height:150px;width:auto;filter:brightness(0) invert(1);opacity:0.9;">
 </div>
         <div class="profile-handle" id="profileHandle"></div>
         <div class="profile-member-since" id="profileMemberSince"></div>
+        <button class="settings-gear-btn" onclick="openSettingsModal()" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
       </div>
       <div class="stats-grid" id="statsGrid"></div>
 
@@ -4104,7 +4239,9 @@ async function createCard(track, opts = {}) {
     season: null,
     era: deriveEra(track.releaseDate ? parseInt(track.releaseDate) : null),
     energy: null,
-    collectReason: opts.prompt || null
+    collectReason: opts.prompt || null,
+    addedVia: 'search',
+    isFirstEver: allCards.length === 0
   };
 
   await dbPut('cards', card);
@@ -5233,17 +5370,19 @@ async function openCardDetail(cardId) {
     ${renderBadgesHTML(card)}
   `;
 
-  // Render waveform on detail front
-  try {
-    const wfCanvas = document.getElementById('waveformCanvas');
-    if (wfCanvas) {
-      const rect = wfCanvas.parentElement.getBoundingClientRect();
-      wfCanvas.width = rect.width || 300;
-      wfCanvas.height = rect.height || 60;
-      const wfData = visualEngine.waveformRenderer.generateSyntheticWaveform(card.title + card.artist);
-      visualEngine.waveformRenderer.render(wfCanvas, wfData, card.palette || {});
-    }
-  } catch(e) { console.warn('Waveform render failed:', e); }
+  // Render waveform on detail front (wrapped in rAF so DOM has painted)
+  requestAnimationFrame(() => {
+    try {
+      const wfCanvas = document.getElementById('waveformCanvas');
+      if (wfCanvas && visualEngine.waveformRenderer) {
+        const rect = wfCanvas.parentElement.getBoundingClientRect();
+        wfCanvas.width = rect.width || 300;
+        wfCanvas.height = rect.height || 60;
+        const wfData = visualEngine.waveformRenderer.generateSyntheticWaveform(card.title + card.artist);
+        visualEngine.waveformRenderer.render(wfCanvas, wfData, card.palette || {});
+      }
+    } catch(e) { console.warn('Waveform render failed:', e); }
+  });
 
   // Back — v1.8 redesign: header + rich scroll content + action bar
   const dateStr = card.createdAt ? timeAgo(card.createdAt) : '';
@@ -5259,6 +5398,9 @@ async function openCardDetail(cardId) {
       <div class="back-title">${escHtml(card.title)}</div>
       <div class="back-artist">${escHtml(card.artist)}</div>
       <div class="back-date">${metaLine}</div>
+      <button class="flip-back-btn" onclick="event.stopPropagation(); forceFlipBack()" title="Flip to front">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 3v6h6"/></svg>
+      </button>
     </div>
     <div class="card-back-scroll">
       <div class="card-back-section">
@@ -5336,20 +5478,17 @@ async function openCardDetail(cardId) {
 }
 
 function flipCardDetail(e) {
-  if (e.target.closest('button, a, textarea, input, .card-back-scroll')) return;
+  if (e.target.closest('button, a, textarea, input, select, .card-back-scroll')) return;
   const inner = document.getElementById('cardDetailInner');
-  if (inner.dataset.flipping) return;
+  if (!inner || inner.dataset.flipping) return;
   inner.dataset.flipping = '1';
-  const isFlipping = !inner.classList.contains('flipped');
   haptic('medium');
   if (currentDetailCard) logEvent('card_flipped', { cardId: currentDetailCard.id });
-  // Phase 1: Shrink to thin line (simulate edge-on view)
-  inner.style.transition = 'transform 250ms cubic-bezier(0.4, 0, 0.6, 1)';
-  inner.style.transform = 'scaleX(0)';
+
+  inner.classList.toggle('flipped');
+
+  // Emit flip particles at midpoint
   setTimeout(() => {
-    // Swap at midpoint
-    inner.classList.toggle('flipped');
-    // Emit flip particles at midpoint
     if (visualEngine.shouldAnimate() && currentDetailCard) {
       try {
         const pe = visualEngine.flipParticles;
@@ -5358,11 +5497,32 @@ function flipCardDetail(e) {
         pe.emit(pal.accent || pal.vibrant || '#C9A84C');
       } catch(e) { console.warn('Flip particles failed:', e); }
     }
-    // Phase 2: Expand back out
-    inner.style.transition = 'transform 250ms cubic-bezier(0.2, 0, 0, 1)';
-    inner.style.transform = 'scaleX(1)';
-    setTimeout(() => { delete inner.dataset.flipping; }, 260);
-  }, 260);
+  }, 200);
+
+  setTimeout(() => { delete inner.dataset.flipping; }, 500);
+}
+
+function forceFlipBack() {
+  const inner = document.getElementById('cardDetailInner');
+  if (!inner || !inner.classList.contains('flipped') || inner.dataset.flipping) return;
+  inner.dataset.flipping = '1';
+  haptic('medium');
+  if (currentDetailCard) logEvent('card_flipped', { cardId: currentDetailCard.id });
+
+  inner.classList.remove('flipped');
+
+  setTimeout(() => {
+    if (visualEngine.shouldAnimate() && currentDetailCard) {
+      try {
+        const pe = visualEngine.flipParticles;
+        pe.init(inner.parentElement || inner);
+        const pal = currentDetailCard.palette || {};
+        pe.emit(pal.accent || pal.vibrant || '#C9A84C');
+      } catch(e) { console.warn('Flip particles failed:', e); }
+    }
+  }, 200);
+
+  setTimeout(() => { delete inner.dataset.flipping; }, 500);
 }
 
 function closeCardDetailOnBg(e) {
@@ -5372,6 +5532,16 @@ function closeCardDetailOnBg(e) {
 function closeCardDetail() {
   stopPreview();
   document.getElementById('cardDetailOverlay').classList.remove('show');
+  // Reset flip state for next open
+  const inner = document.getElementById('cardDetailInner');
+  if (inner) {
+    inner.classList.remove('flipped');
+    inner.style.transition = 'none';
+    inner.style.transform = '';
+    delete inner.dataset.flipping;
+    // Re-enable transitions after reset
+    requestAnimationFrame(() => { inner.style.transition = ''; });
+  }
   currentDetailCard = null;
   _detailCardList = [];
   _detailCardIndex = -1;
@@ -6420,6 +6590,30 @@ function toggleSettings() {
   }
 }
 
+function openSettingsModal() {
+  const overlay = document.getElementById('settingsModalOverlay');
+  document.getElementById('settingsModalHandle').value = settings?.handle || '';
+  document.getElementById('settingsModalStreaming').value = settings?.defaultStreaming || 'apple-music';
+  overlay.classList.add('show');
+}
+function closeSettingsModal() {
+  document.getElementById('settingsModalOverlay').classList.remove('show');
+}
+function saveSettingsFromModal() {
+  const handle = document.getElementById('settingsModalHandle').value.trim();
+  const streaming = document.getElementById('settingsModalStreaming').value;
+  settings.handle = handle;
+  settings.defaultStreaming = streaming;
+  dbPut('settings', settings);
+  // Sync to existing settings UI
+  const hi = document.getElementById('handleInput');
+  if (hi) hi.value = handle;
+  const ss = document.getElementById('streamingSelect');
+  if (ss) ss.value = streaming;
+  const ph = document.getElementById('profileHandle');
+  if (ph) ph.textContent = handle ? `@${handle}` : '';
+}
+
 // ── EXPORT ──
 async function exportJSON() {
   const data = { cards: allCards, decks: allDecks, settings, exportedAt: new Date().toISOString() };
@@ -6536,8 +6730,11 @@ window.addEventListener('offline', updateOnlineStatus);
     if (Math.abs(dy) > Math.abs(dx)) { _swiping = false; return; }
     const el = container();
     if (el) {
-      const clamped = Math.sign(dx) * Math.min(Math.abs(dx), 100);
-      el.style.transform = `translateX(${clamped}px)`;
+      const clamped = Math.sign(dx) * Math.min(Math.abs(dx), 120);
+      const rotation = clamped * 0.04;
+      const opacity = 1 - Math.abs(clamped) / 300;
+      el.style.transform = `translateX(${clamped}px) rotate(${rotation}deg)`;
+      el.style.opacity = Math.max(0.4, opacity);
       el.style.transition = 'none';
     }
   }, { passive: true });
@@ -6548,12 +6745,13 @@ window.addEventListener('offline', updateOnlineStatus);
     const dx = e.changedTouches[0].clientX - _swipeStartX;
     const el = container();
     if (el) {
-      el.style.transition = 'transform 200ms ease-out';
+      el.style.transition = 'transform 400ms var(--ease-spring), opacity 200ms var(--ease-standard)';
       el.style.transform = '';
+      el.style.opacity = '';
     }
     if (Math.abs(dx) > 60) {
-      if (dx < 0) navigateDetailCard(1);  // swipe left = next
-      else navigateDetailCard(-1);  // swipe right = prev
+      if (dx < 0) navigateDetailCard(1);
+      else navigateDetailCard(-1);
     }
   });
 
@@ -6570,13 +6768,17 @@ window.addEventListener('offline', updateOnlineStatus);
 function navigateDetailCard(dir) {
   const newIdx = _detailCardIndex + dir;
   if (newIdx < 0 || newIdx >= _detailCardList.length) {
-    // Boundary bounce
+    // Boundary bounce — use spring
     const el = document.querySelector('.card-detail-container');
     if (el) {
-      el.style.transition = 'transform 200ms var(--ease-spring)';
-      el.style.transform = `translateX(${dir < 0 ? 15 : -15}px)`;
-      setTimeout(() => { el.style.transform = ''; }, 200);
+      el.style.transition = 'transform 300ms var(--ease-spring)';
+      el.style.transform = `translateX(${dir < 0 ? 20 : -20}px) scale(0.98)`;
+      setTimeout(() => {
+        el.style.transition = 'transform 300ms var(--ease-spring)';
+        el.style.transform = '';
+      }, 150);
     }
+    haptic('light');
     return;
   }
   // Reset flip state
@@ -6590,22 +6792,22 @@ function navigateDetailCard(dir) {
   // Animate out
   const el = document.querySelector('.card-detail-container');
   if (el) {
-    el.style.transition = 'transform 200ms ease-out, opacity 150ms ease-out';
-    el.style.transform = `translateX(${dir < 0 ? 80 : -80}px)`;
-    el.style.opacity = '0.3';
+    el.style.transition = 'transform 200ms var(--ease-standard), opacity 150ms var(--ease-standard)';
+    el.style.transform = `translateX(${dir < 0 ? 100 : -100}px) scale(0.92) rotate(${dir * 3}deg)`;
+    el.style.opacity = '0';
     setTimeout(() => {
       openCardDetail(_detailCardList[newIdx]);
       if (el) {
         el.style.transition = 'none';
-        el.style.transform = `translateX(${dir < 0 ? -60 : 60}px)`;
-        el.style.opacity = '0.3';
+        el.style.transform = `translateX(${dir > 0 ? 100 : -100}px) scale(0.92)`;
+        el.style.opacity = '0';
         requestAnimationFrame(() => {
-          el.style.transition = 'transform 200ms ease-out, opacity 150ms ease-out';
+          el.style.transition = 'transform 350ms var(--ease-spring), opacity 200ms var(--ease-standard)';
           el.style.transform = '';
           el.style.opacity = '';
         });
       }
-    }, 180);
+    }, 200);
   } else {
     openCardDetail(_detailCardList[newIdx]);
   }
@@ -7061,7 +7263,7 @@ class FlipParticleEngine {
         p.vy += 0.15;
         p.vx *= 0.98;
         p.vy *= 0.98;
-        p.life -= 0.025;
+        p.life -= 0.04;
         this.ctx.globalAlpha = p.life * p.alpha;
         this.ctx.fillStyle = p.color;
         this.ctx.beginPath();
@@ -7240,6 +7442,45 @@ init().catch(e => {
     </div>
   </div>
 
+
+<!-- Settings Modal -->
+<div class="settings-modal-overlay" id="settingsModalOverlay" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="settings-modal-sheet">
+    <div class="settings-modal-header">
+      <span class="settings-title">Settings</span>
+      <button class="settings-modal-close" onclick="closeSettingsModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="settings-modal-item">
+      <span class="label">Handle</span>
+      <input type="text" id="settingsModalHandle" placeholder="@yourname" maxlength="30" onchange="saveSettingsFromModal()">
+    </div>
+    <div class="settings-modal-item">
+      <span class="label">Default Streaming</span>
+      <select id="settingsModalStreaming" onchange="saveSettingsFromModal()">
+        <option value="apple-music">Apple Music</option>
+        <option value="spotify">Spotify</option>
+        <option value="youtube-music">YouTube Music</option>
+        <option value="soundcloud">SoundCloud</option>
+        <option value="tidal">Tidal</option>
+      </select>
+    </div>
+    <div class="settings-modal-item" onclick="exportJSON(); closeSettingsModal();">
+      <span class="label">Export Collection (JSON)</span>
+      <span style="color:var(--color-text-tertiary);">&rarr;</span>
+    </div>
+    <div class="settings-modal-item" onclick="exportCSV(); closeSettingsModal();">
+      <span class="label">Export Activity (CSV)</span>
+      <span style="color:var(--color-text-tertiary);">&rarr;</span>
+    </div>
+    <div class="settings-modal-item destructive" onclick="clearAllData()">
+      <span class="label">Clear All Data</span>
+      <span style="color:var(--color-text-tertiary);">&rarr;</span>
+    </div>
+    <div class="settings-modal-version">heard. v1.8 — Phase 1</div>
+  </div>
+</div>
 
 <!-- Mood Picker (v1.8) -->
 <div class="mood-picker-overlay" id="moodPickerOverlay" onclick="if(event.target===this)closeMoodPicker()">
