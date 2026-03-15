@@ -1079,7 +1079,6 @@ img { display: block; max-width: 100%; }
   aspect-ratio: 3/4;
   max-height: clamp(420px, 75vh, 560px);
   position: relative;
-  perspective: 1200px;
   cursor: pointer;
 }
 @media (min-width: 414px) {
@@ -1095,24 +1094,31 @@ img { display: block; max-width: 100%; }
   width: 100%;
   height: 100%;
   position: relative;
-  transform-style: preserve-3d;
-  transition: transform 500ms var(--ease-spring);
-}
-.card-detail-inner.flipped {
-  transform: rotateY(180deg);
-  filter: drop-shadow(-4px 0 16px rgba(0,0,0,0.3));
+  transform-origin: center center;
 }
 .card-detail-face {
   position: absolute;
   inset: 0;
-  backface-visibility: hidden;
   border-radius: var(--radius-card);
   overflow: hidden;
   box-shadow: var(--shadow-lift);
+  transition: opacity 0s linear 250ms;
 }
 .card-detail-front {
   display: flex;
   flex-direction: column;
+  z-index: 2;
+  opacity: 1;
+}
+.card-detail-inner.flipped .card-detail-front {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0s linear 250ms;
+}
+.card-detail-inner.flipped .card-detail-back {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0s linear 250ms;
 }
 .card-detail-front-art {
   width: 100%;
@@ -1202,11 +1208,13 @@ img { display: block; max-width: 100%; }
 /* Card back */
 /* Card back — locked to same size as front */
 .card-detail-back {
-  transform: rotateY(180deg);
   background: var(--color-surface);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 .card-back-header {
   padding: var(--space-4) var(--space-5) var(--space-3);
@@ -5030,6 +5038,9 @@ async function openCardDetail(cardId) {
   const links = getStreamingLinks(card);
   const inner = document.getElementById('cardDetailInner');
   inner.classList.remove('flipped');
+  inner.style.transform = '';
+  inner.style.transition = '';
+  delete inner.dataset.flipping;
 
   // Front
   document.getElementById('detailFront').innerHTML = `
@@ -5145,11 +5156,24 @@ async function openCardDetail(cardId) {
 }
 
 function flipCardDetail(e) {
-  if (e.target.closest('button, a, textarea, input')) return;
+  if (e.target.closest('button, a, textarea, input, .card-back-scroll')) return;
   const inner = document.getElementById('cardDetailInner');
-  inner.classList.toggle('flipped');
+  if (inner.dataset.flipping) return;
+  inner.dataset.flipping = '1';
+  const isFlipping = !inner.classList.contains('flipped');
   haptic('medium');
   if (currentDetailCard) logEvent('card_flipped', { cardId: currentDetailCard.id });
+  // Phase 1: Shrink to thin line (simulate edge-on view)
+  inner.style.transition = 'transform 250ms cubic-bezier(0.4, 0, 0.6, 1)';
+  inner.style.transform = 'scaleX(0)';
+  setTimeout(() => {
+    // Swap at midpoint
+    inner.classList.toggle('flipped');
+    // Phase 2: Expand back out
+    inner.style.transition = 'transform 250ms cubic-bezier(0.2, 0, 0, 1)';
+    inner.style.transform = 'scaleX(1)';
+    setTimeout(() => { delete inner.dataset.flipping; }, 260);
+  }, 260);
 }
 
 function closeCardDetailOnBg(e) {
@@ -6358,7 +6382,12 @@ function navigateDetailCard(dir) {
   }
   // Reset flip state
   const inner = document.getElementById('cardDetailInner');
-  if (inner) inner.classList.remove('flipped');
+  if (inner) {
+    inner.classList.remove('flipped');
+    inner.style.transform = '';
+    inner.style.transition = '';
+    delete inner.dataset.flipping;
+  }
   // Animate out
   const el = document.querySelector('.card-detail-container');
   if (el) {
