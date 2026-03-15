@@ -285,6 +285,7 @@ img { display: block; max-width: 100%; }
 .onboard-tagline {
   font-family: var(--font-editorial);
   font-style: italic;
+  white-space: nowrap;
   font-size: var(--text-lg);
   color: var(--color-text-secondary);
   margin-top: var(--space-4);
@@ -393,6 +394,30 @@ img { display: block; max-width: 100%; }
   width: 18px;
   height: 18px;
 }
+
+/* Search input polish */
+.search-input-wrap { position: relative; }
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-micro) ease;
+  pointer-events: none;
+}
+.search-clear-btn.show { opacity: 1; pointer-events: all; }
+.search-clear-btn:hover { background: rgba(255,255,255,0.15); }
+
 .search-results {
   display: flex;
   flex-direction: column;
@@ -410,8 +435,8 @@ img { display: block; max-width: 100%; }
 }
 .search-result-item:hover { background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); }
 .search-result-item img {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
@@ -436,17 +461,19 @@ img { display: block; max-width: 100%; }
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
 }
+
+/* In collection styling */
+.search-result-item.in-collection { opacity: 0.55; }
+.search-result-item.in-collection:hover { opacity: 0.7; }
 .in-collection-badge {
-  font-size: 9px;
-  font-weight: var(--weight-semi);
-  color: var(--color-gold);
-  background: rgba(201,168,76,0.12);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  white-space: nowrap;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
+
 .search-empty {
   text-align: center;
   padding: var(--space-16) var(--space-4);
@@ -599,7 +626,7 @@ img { display: block; max-width: 100%; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   scroll-padding-inline: var(--space-3);
 }
 .collection-controls::-webkit-scrollbar { display: none; }
@@ -929,26 +956,77 @@ img { display: block; max-width: 100%; }
 }
 
 /* Card back */
+/* Card back — locked to same size as front */
 .card-detail-back {
   transform: rotateY(180deg);
   background: var(--color-surface);
   display: flex;
   flex-direction: column;
-  padding: var(--space-5);
-  padding-bottom: 0;
+  overflow: hidden;
+}
+.card-back-header {
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.card-back-header .back-title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  line-height: var(--leading-tight);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-back-header .back-artist {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-back-header .back-date {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+.card-back-scroll {
+  flex: 1;
   overflow-y: auto;
+  padding: var(--space-3) var(--space-5);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   position: relative;
 }
-.card-detail-back::after {
+.card-back-scroll::after {
   content: '';
   position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 8px;
+  display: block;
+  height: 20px;
   background: linear-gradient(transparent, var(--color-surface));
   pointer-events: none;
+  margin-top: -20px;
+}
+.card-back-action-bar {
   flex-shrink: 0;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+}
+.card-back-action-bar .card-action-btn {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 11px;
 }
 .card-back-section { margin-bottom: var(--space-5); }
 .card-back-label {
@@ -1065,17 +1143,7 @@ img { display: block; max-width: 100%; }
 
 /* Card back actions */
 .card-back-actions {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  margin-top: auto;
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-4);
-  border-top: 1px solid var(--color-border-subtle);
-  position: sticky;
-  bottom: 0;
-  background: var(--color-surface);
-  z-index: 2;
+  display: none; /* replaced by card-back-action-bar */
 }
 .card-action-btn {
   padding: 8px 14px;
@@ -1457,6 +1525,7 @@ img { display: block; max-width: 100%; }
   border-radius: var(--radius-md);
   padding: var(--space-4);
   text-align: center;
+  border: 1px solid rgba(232,224,208,0.06);
 }
 .stat-value {
   font-family: var(--font-display);
@@ -1621,10 +1690,152 @@ img { display: block; max-width: 100%; }
   padding-top: var(--space-3);
 }
 
+
+/* ═══ SEARCH PREVIEW PLAYER ═══ */
+.search-preview-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-gold);
+  background: transparent;
+  color: var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--dur-micro) var(--ease-micro);
+  cursor: pointer;
+}
+.search-preview-btn:active { transform: scale(0.9); }
+.search-preview-btn.playing {
+  background: var(--color-gold);
+  color: var(--color-bg);
+  border-color: var(--color-gold);
+}
+.search-preview-btn svg { width: 14px; height: 14px; }
+.search-result-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  margin-left: 6px;
+}
+.search-result-eq span {
+  width: 2px;
+  background: var(--color-gold);
+  border-radius: 1px;
+  animation: eqBounce 0.6s ease-in-out infinite alternate;
+}
+.search-result-eq span:nth-child(2) { animation-delay: 0.15s; }
+.search-result-eq span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes eqBounce {
+  from { height: 3px; }
+  to { height: 12px; }
+}
+
+/* Floating preview bar */
+.preview-bar {
+  position: fixed;
+  bottom: 76px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  width: calc(100% - 32px);
+  max-width: 380px;
+  height: 52px;
+  background: rgba(26,26,30,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  z-index: 999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: transform 400ms var(--ease-spring), opacity 300ms ease;
+  pointer-events: none;
+}
+.preview-bar.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+.preview-bar-art {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.preview-bar-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.preview-bar-title {
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-bar-artist {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-bar-progress {
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1px;
+}
+.preview-bar-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-gold);
+  border-radius: 1px;
+  transition: width 0.3s linear;
+}
+.preview-bar-add {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--color-gold);
+  color: var(--color-bg);
+  font-size: 11px;
+  font-weight: var(--weight-semi);
+  flex-shrink: 0;
+  transition: all var(--dur-micro) var(--ease-micro);
+  cursor: pointer;
+  border: none;
+}
+.preview-bar-add:active { transform: scale(0.95); }
+.preview-bar-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.preview-bar-close:hover { color: var(--color-text-primary); }
+
 /* ═══ TOAST ═══ */
 .toast {
   position: fixed;
-  bottom: 90px;
+  bottom: 88px;
   left: 50%;
   transform: translateX(-50%) translateY(12px) scale(0.95);
   background: rgba(34, 34, 38, 0.92);
@@ -2447,7 +2658,10 @@ img { display: block; max-width: 100%; }
       </div>
       <div class="search-input-wrap">
         <svg class="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search for a song...">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search for a song..." oninput="toggleSearchClear()">
+        <div class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </div>
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="search-empty" id="searchEmpty" style="display:none;">
@@ -2539,7 +2753,7 @@ img { display: block; max-width: 100%; }
         <div class="profile-section-title">About</div>
         <div class="profile-list-item">
           <span class="label">HEARD</span>
-          <span class="value">v1.5 — Phase 1</span>
+          <span class="value">v1.7 — Phase 1</span>
         </div>
         <div class="profile-list-item">
           <span class="label">you heard it. now keep it.</span>
@@ -3702,6 +3916,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ── SEARCH UI UTILS ──
+function toggleSearchClear() {
+  const btn = document.getElementById('searchClearBtn');
+  const input = document.getElementById('searchInput');
+  if (btn) btn.classList.toggle('show', input && input.value.length > 0);
+}
+
+function clearSearchInput() {
+  const input = document.getElementById('searchInput');
+  if (input) { input.value = ''; input.focus(); }
+  toggleSearchClear();
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('searchEmpty').style.display = 'block';
+  if (typeof stopSearchPreview === 'function') stopSearchPreview();
+}
+
 async function searchiTunes(query) {
   if (!query || query.length < 2) {
     document.getElementById('searchResults').innerHTML = '';
@@ -3732,17 +3962,23 @@ async function searchiTunes(query) {
       return;
     }
 
-    results.innerHTML = data.results.map((r, idx) => `
-      <div class="search-result-item" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')" data-idx="${idx}">
-        <img src="${getArtUrl(r.artworkUrl100, 100)}" alt="" loading="lazy">
-        <div class="search-result-info">
+    results.innerHTML = data.results.map((r, idx) => {
+      const dur = r.trackTimeMillis ? formatDuration(r.trackTimeMillis) : '';
+      const inCollection = existingTrackIds.has(r.trackId);
+      return `
+      <div class="search-result-item${inCollection ? ' in-collection' : ''}" data-idx="${idx}">
+        <img src="${getArtUrl(r.artworkUrl100, 100)}" alt="" loading="lazy" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')">
+        <div class="search-result-info" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')">
           <div class="title">${escHtml(r.trackName)}</div>
           <div class="artist">${escHtml(r.artistName)}</div>
-          <div class="year">${r.releaseDate ? new Date(r.releaseDate).getFullYear() : ''} · ${escHtml(r.primaryGenreName || '')}</div>
+          <div class="year">${r.releaseDate ? new Date(r.releaseDate).getFullYear() : ''} · ${escHtml(r.primaryGenreName || '')}${dur ? ' · ' + dur : ''}</div>
         </div>
-        ${existingTrackIds.has(r.trackId) ? '<span class="in-collection-badge">In Collection</span>' : ''}
-      </div>
-    `).join('');
+        ${inCollection ? '<span class="in-collection-badge" title="In Collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--color-gold)" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></span>' : ''}
+        ${r.previewUrl ? `<button class="search-preview-btn" onclick="event.stopPropagation(); toggleSearchPreview(${idx})" id="searchPreviewBtn_${idx}">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 19,12 8,19"/></svg>
+        </button>` : ''}
+      </div>`;
+    }).join('');
 
     // Store results for tap handling
     window._lastSearchResults = data.results;
@@ -3751,10 +3987,131 @@ async function searchiTunes(query) {
   }
 }
 
+
+// ── SEARCH PREVIEW PLAYER ──
+let _previewAudioSearch = null;
+let _previewTrackIdx = null;
+let _previewProgressInterval = null;
+let _previewedTrack = null;
+
+function toggleSearchPreview(idx) {
+  const results = window._lastSearchResults;
+  if (!results || !results[idx]) return;
+  const track = results[idx];
+  
+  // If same track, toggle pause/play
+  if (_previewTrackIdx === idx && _previewAudioSearch && !_previewAudioSearch.paused) {
+    _previewAudioSearch.pause();
+    updateSearchPreviewBtn(idx, false);
+    haptic('selection');
+    return;
+  }
+  
+  // Stop any current preview
+  stopSearchPreview();
+  
+  // Start new preview
+  if (!track.previewUrl) return;
+  _previewTrackIdx = idx;
+  _previewedTrack = track;
+  _previewAudioSearch = new Audio(track.previewUrl);
+  _previewAudioSearch.volume = 0;
+  
+  // Fade in
+  _previewAudioSearch.play().then(() => {
+    let vol = 0;
+    const fadeIn = setInterval(() => {
+      vol = Math.min(1, vol + 0.1);
+      if (_previewAudioSearch) _previewAudioSearch.volume = vol;
+      if (vol >= 1) clearInterval(fadeIn);
+    }, 30);
+  }).catch(() => {});
+  
+  haptic('light');
+  updateSearchPreviewBtn(idx, true);
+  showPreviewBar(track);
+  
+  // Progress tracking
+  _previewProgressInterval = setInterval(() => {
+    if (!_previewAudioSearch) return;
+    const pct = (_previewAudioSearch.currentTime / _previewAudioSearch.duration) * 100;
+    const fill = document.getElementById('previewBarProgress');
+    if (fill) fill.style.width = pct + '%';
+  }, 200);
+  
+  _previewAudioSearch.addEventListener('ended', () => {
+    stopSearchPreview();
+  });
+  
+  logEvent('search_preview_started', { trackId: track.trackId, position: idx });
+}
+
+function stopSearchPreview() {
+  if (_previewAudioSearch) {
+    // Fade out
+    let vol = _previewAudioSearch.volume;
+    const fadeOut = setInterval(() => {
+      vol = Math.max(0, vol - 0.15);
+      if (_previewAudioSearch) _previewAudioSearch.volume = vol;
+      if (vol <= 0) {
+        clearInterval(fadeOut);
+        if (_previewAudioSearch) { _previewAudioSearch.pause(); _previewAudioSearch = null; }
+      }
+    }, 30);
+  }
+  if (_previewProgressInterval) { clearInterval(_previewProgressInterval); _previewProgressInterval = null; }
+  if (_previewTrackIdx !== null) {
+    updateSearchPreviewBtn(_previewTrackIdx, false);
+    _previewTrackIdx = null;
+  }
+  hidePreviewBar();
+}
+
+function updateSearchPreviewBtn(idx, playing) {
+  const btn = document.getElementById('searchPreviewBtn_' + idx);
+  if (!btn) return;
+  if (playing) {
+    btn.classList.add('playing');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="3" height="14"/><rect x="14" y="5" width="3" height="14"/></svg>';
+  } else {
+    btn.classList.remove('playing');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 19,12 8,19"/></svg>';
+  }
+}
+
+function showPreviewBar(track) {
+  const bar = document.getElementById('previewBar');
+  document.getElementById('previewBarArt').src = getArtUrl(track.artworkUrl100, 100);
+  document.getElementById('previewBarTitle').textContent = track.trackName;
+  document.getElementById('previewBarArtist').textContent = track.artistName;
+  document.getElementById('previewBarProgress').style.width = '0%';
+  bar.classList.add('show');
+}
+
+function hidePreviewBar() {
+  const bar = document.getElementById('previewBar');
+  if (bar) bar.classList.remove('show');
+}
+
+function closePreviewBar() {
+  stopSearchPreview();
+}
+
+function addPreviewedSong() {
+  if (!_previewedTrack) return;
+  const track = _previewedTrack;
+  const idx = _previewTrackIdx;
+  const query = document.getElementById('searchInput')?.value || '';
+  stopSearchPreview();
+  // Use the existing handleSearchResultTap flow
+  handleSearchResultTap(idx, query);
+}
+
 async function handleSearchResultTap(idx, query) {
   const results = window._lastSearchResults;
   if (!results || !results[idx]) return;
   const track = results[idx];
+  stopSearchPreview(); // Stop any active preview
   haptic('success');
   playPreviewSnippet(track.previewUrl);
   logEvent('search_result_tapped', { query, trackId: track.trackId, resultPosition: idx });
@@ -3911,49 +4268,41 @@ async function openCardDetail(cardId) {
     </div>` : ''}
   `;
 
-  // Back
+  // Back — restructured: header + scrollable content + fixed action bar
+  const dateStr = card.dateAdded ? new Date(card.dateAdded).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '';
   document.getElementById('detailBack').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);padding:0 var(--space-2);">
-<img style="opacity:0.4;height:16px;width:auto;" src="heard-drive-wordmark.png" alt="heard." style="height:16px;width:auto;filter:brightness(0) invert(1);opacity:0.4;">
-      <span style="font-size:var(--text-xs);color:var(--color-text-tertiary);">${card.dateAdded ? new Date(card.dateAdded).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : ''}</span>
+    <div class="card-back-header">
+      <div class="back-title">${escHtml(card.title)}</div>
+      <div class="back-artist">${escHtml(card.artist)} · ${escHtml(card.album)}</div>
+      <div class="back-date">${dateStr} · ${formatDuration(card.duration)} · ${escHtml(card.genre)}</div>
     </div>
-    <div class="card-back-section">
-      <div class="card-back-label">Notes</div>
-      <textarea class="card-back-notes" id="detailNotes" maxlength="280" placeholder="Add a memory..."
-        oninput="updateNotes(this)">${escHtml(card.notes || '')}</textarea>
-      <div class="card-back-char-count"><span id="charCount">${(card.notes || '').length}</span>/280</div>
-    </div>
-    <div class="card-back-section">
-      <div class="card-back-label">Tags</div>
-      <div class="card-back-tags" id="detailTags">
-        ${(card.tags || []).map(t => `<span class="tag-pill">${escHtml(t)}<span class="remove" onclick="event.stopPropagation(); removeTag('${card.id}', '${escHtml(t)}')">×</span></span>`).join('')}
-        <button class="tag-add-btn" onclick="event.stopPropagation(); addTagUI()">+ tag</button>
+    <div class="card-back-scroll">
+      <div class="card-back-section">
+        <div class="card-back-label">Notes</div>
+        <textarea class="card-back-notes" id="detailNotes" maxlength="280" placeholder="Add a memory..."
+          oninput="updateNotes(this)" style="min-height:48px;">${escHtml(card.notes || '')}</textarea>
+        <div class="card-back-char-count"><span id="charCount">${(card.notes || '').length}</span>/280</div>
+      </div>
+      <div class="card-back-section">
+        <div class="card-back-label">Tags</div>
+        <div class="card-back-tags" id="detailTags">
+          ${(card.tags || []).map(t => `<span class="tag-pill">${escHtml(t)}<span class="remove" onclick="event.stopPropagation(); removeTag('${card.id}', '${escHtml(t)}')">×</span></span>`).join('')}
+          <button class="tag-add-btn" onclick="event.stopPropagation(); addTagUI()">+ tag</button>
+        </div>
+      </div>
+      <div class="card-back-section">
+        <div class="card-back-label">Listen On</div>
+        <div class="listen-on-row">
+          <a href="${links.apple}" target="_blank" class="listen-on-btn apple" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'apple'});">Apple</a>
+          <a href="${links.spotify}" target="_blank" class="listen-on-btn spotify" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'spotify'});">Spotify</a>
+          <a href="${links.youtube}" target="_blank" class="listen-on-btn youtube" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'youtube'});">YouTube</a>
+          <a href="${links.soundcloud}" target="_blank" class="listen-on-btn soundcloud" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'soundcloud'});">SoundCloud</a>
+          <a href="${links.tidal}" target="_blank" class="listen-on-btn tidal" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'tidal'});">Tidal</a>
+        </div>
       </div>
     </div>
-    <div class="card-back-section">
-      <div class="card-back-label">Details</div>
-      <div class="card-back-meta-grid">
-        <span class="label">Album</span><span class="value">${escHtml(card.album)}</span>
-        <span class="label">Year</span><span class="value">${card.year || '—'}</span>
-        <span class="label">Duration</span><span class="value">${formatDuration(card.duration)}</span>
-        <span class="label">Genre</span><span class="value">${escHtml(card.genre)}</span>
-        <span class="label">Added</span><span class="value">${timeAgo(card.createdAt)}</span>
-        <span class="label">Viewed</span><span class="value">${card.viewCount} ${card.viewCount === 1 ? 'time' : 'times'}</span>
-      </div>
-    </div>
-    <div class="card-back-section">
-      <div class="card-back-label">Listen On</div>
-      <div class="listen-on-row">
-        <a href="${links.apple}" target="_blank" class="listen-on-btn apple" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'apple'});">Apple</a>
-        <a href="${links.spotify}" target="_blank" class="listen-on-btn spotify" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'spotify'});">Spotify</a>
-        <a href="${links.youtube}" target="_blank" class="listen-on-btn youtube" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'youtube'});">YouTube</a>
-        <a href="${links.soundcloud}" target="_blank" class="listen-on-btn soundcloud" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'soundcloud'});">SoundCloud</a>
-        <a href="${links.tidal}" target="_blank" class="listen-on-btn tidal" onclick="event.stopPropagation(); logEvent('streaming_link_tapped',{cardId:'${card.id}',service:'tidal'});">Tidal</a>
-      </div>
-    </div>
-    ${settings.handle ? `<div style="font-size:10px;color:var(--color-text-tertiary);text-align:right;margin-top:auto;">@${escHtml(settings.handle)}</div>` : ''}
-    <div class="card-back-actions">
-      <button class="card-action-btn" onclick="event.stopPropagation(); openDeckPicker('${card.id}')">Add to Deck</button>
+    <div class="card-back-action-bar">
+      <button class="card-action-btn" onclick="event.stopPropagation(); openDeckPicker('${card.id}')">Deck</button>
       <button class="card-action-btn" onclick="event.stopPropagation(); shareCard('${card.id}')">Share</button>
       <button class="card-action-btn destructive" onclick="event.stopPropagation(); deleteCardFromDetail('${card.id}')">Delete</button>
     </div>
@@ -4773,7 +5122,7 @@ function renderProfile() {
         <img src="${getArtUrl(mostHeard.coverArtUrl, 100)}" alt="" style="width:40px;height:40px;border-radius:8px;">
         <div style="text-align:left;">
           <div style="font-size:13px;font-weight:500;">${escHtml(mostHeard.title)}</div>
-          <div style="font-size:11px;color:var(--color-text-tertiary);">${escHtml(mostHeard.artist)} · ${mostHeard.viewCount} views</div>
+          <div style="font-size:11px;color:var(--color-text-tertiary);">${escHtml(mostHeard.artist)} · ${mostHeard.viewCount} ${mostHeard.viewCount === 1 ? 'view' : 'views'}</div>
         </div>
       </div>
     </div>` : ''}
@@ -5168,6 +5517,23 @@ init().catch(e => {
   }
 });
 </script>
+
+
+  <!-- Preview Player Bar -->
+  <div class="preview-bar" id="previewBar">
+    <img class="preview-bar-art" id="previewBarArt" src="" alt="">
+    <div class="preview-bar-info">
+      <div class="preview-bar-title" id="previewBarTitle"></div>
+      <div class="preview-bar-artist" id="previewBarArtist"></div>
+    </div>
+    <button class="preview-bar-add" id="previewBarAdd" onclick="addPreviewedSong()">Collect</button>
+    <div class="preview-bar-close" onclick="closePreviewBar()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </div>
+    <div class="preview-bar-progress">
+      <div class="preview-bar-progress-fill" id="previewBarProgress"></div>
+    </div>
+  </div>
 
 </body>
 </html>
