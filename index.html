@@ -153,30 +153,35 @@ img { display: block; max-width: 100%; }
 #content-area {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
-  /* Leave room for fixed bottom nav */
-  margin-bottom: 64px;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Leave room for fixed bottom nav — dynamic with safe area */
+  margin-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
 }
 .tab-content {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 100%;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(8px);
+  transform: translateY(16px);
+  filter: blur(2px);
   transition: opacity var(--dur-medium) var(--ease-standard), 
               transform var(--dur-medium) var(--ease-standard),
+              filter var(--dur-medium) var(--ease-standard),
               visibility 0s linear var(--dur-medium);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 .tab-content.active {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
-  transition: opacity var(--dur-medium) var(--ease-standard), 
-              transform var(--dur-medium) var(--ease-standard),
+  filter: blur(0);
+  transition: opacity var(--dur-medium) var(--ease-standard) 150ms, 
+              transform var(--dur-medium) var(--ease-standard) 150ms,
+              filter var(--dur-medium) var(--ease-standard) 150ms,
               visibility 0s linear 0s;
   position: relative;
 }
@@ -187,9 +192,12 @@ img { display: block; max-width: 100%; }
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border-subtle);
+  height: 68px;
+  background: rgba(26, 26, 30, 0.85);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-top: none;
+  box-shadow: 0 -1px 0 rgba(201,168,76,0.08), 0 -4px 16px rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -197,27 +205,33 @@ img { display: block; max-width: 100%; }
   padding-bottom: env(safe-area-inset-bottom, 0);
   opacity: 0;
   transform: translateY(100%);
-  transition: opacity var(--dur-medium) var(--ease-standard), transform var(--dur-medium) var(--ease-standard);
+  transition: opacity var(--dur-medium) var(--ease-standard), transform var(--dur-medium) var(--ease-spring);
+  will-change: transform;
 }
 #bottom-nav.visible {
   opacity: 1;
   transform: translateY(0);
 }
+#bottom-nav.nav-hidden {
+  transform: translateY(calc(100% - 4px));
+}
 .nav-tab {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 8px 16px;
-  min-width: 64px;
-  min-height: 44px;
-  transition: color var(--dur-micro) var(--ease-micro);
+  min-width: 72px;
+  min-height: 48px;
+  transition: color var(--dur-micro) var(--ease-micro), transform var(--dur-small) var(--ease-spring);
   color: var(--color-text-tertiary);
   position: relative;
 }
 .nav-tab.active { color: var(--color-gold); }
-.nav-tab svg { width: 22px; height: 22px; }
-.nav-tab span { font-size: 10px; font-weight: var(--weight-medium); letter-spacing: 0.02em; }
+.nav-tab.active svg { transform: scale(1.08); transition: transform var(--dur-small) var(--ease-spring); }
+.nav-tab svg { width: 24px; height: 24px; transition: transform var(--dur-small) var(--ease-spring); }
+.nav-tab span { font-size: 11px; font-weight: var(--weight-medium); letter-spacing: 0.02em; }
+.nav-tab.active span { font-weight: var(--weight-semi); }
 .nav-tab .pulse-dot {
   position: absolute;
   top: 4px;
@@ -531,7 +545,7 @@ img { display: block; max-width: 100%; }
 .card-heard-text.show { opacity: 1; }
 
 /* ═══ COLLECTION TAB ═══ */
-#tab-collection { padding: var(--space-3) var(--space-3) 100px; }
+#tab-collection { padding: var(--space-3) var(--space-3) var(--space-6); }
 .collection-header {
   padding: var(--space-6) var(--space-1) var(--space-3);
   display: flex;
@@ -585,8 +599,11 @@ img { display: block; max-width: 100%; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--space-3);
 }
 .collection-controls::-webkit-scrollbar { display: none; }
+.collection-controls > * { scroll-snap-align: start; }
 .control-pill {
   padding: 6px 14px;
   border-radius: var(--radius-full);
@@ -634,7 +651,7 @@ img { display: block; max-width: 100%; }
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
   transition: transform var(--dur-medium) var(--ease-spring), box-shadow var(--dur-medium) var(--ease-spring);
-  will-change: transform;
+  aspect-ratio: 2.5 / 3.5;
 }
 @media (hover: hover) {
   .grid-card:hover {
@@ -643,12 +660,12 @@ img { display: block; max-width: 100%; }
   }
 }
 .grid-card:active {
-  transform: scale(0.97) !important;
-  transition: transform 100ms ease !important;
+  transform: scale(0.97);
+  transition: transform 80ms ease-out;
 }
 .grid-card-art-wrap {
-  position: relative;
-  aspect-ratio: 1;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 .grid-card-art {
@@ -662,8 +679,9 @@ img { display: block; max-width: 100%; }
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60%;
+  height: 65%;
   pointer-events: none;
+  z-index: 1;
 }
 .grid-card-fav {
   position: absolute;
@@ -697,22 +715,29 @@ img { display: block; max-width: 100%; }
 }
 .grid-card-pin.show { display: block; }
 .grid-card-info {
-  padding: var(--space-2) var(--space-3) var(--space-3);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 12px 14px;
+  z-index: 2;
 }
 .grid-card-info .title {
   font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: var(--leading-snug);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 .grid-card-info .artist {
   font-size: var(--text-xs);
-  color: var(--color-text-secondary);
+  color: rgba(255,255,255,0.75);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
 
 /* Collection empty state */
@@ -785,22 +810,27 @@ img { display: block; max-width: 100%; }
 }
 .card-detail-close:hover { background: rgba(255,255,255,0.15); }
 .card-detail-container {
-  width: 320px;
-  max-width: 90vw;
+  width: min(320px, 85vw);
   aspect-ratio: 3/4;
-  max-height: 80vh;
+  max-height: min(80vh, 520px);
   position: relative;
   perspective: 1200px;
   cursor: pointer;
+}
+@media (min-width: 414px) {
+  .card-detail-container { width: min(340px, 85vw); }
 }
 .card-detail-inner {
   width: 100%;
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform var(--dur-medium) var(--ease-spring);
+  transition: transform 500ms var(--ease-spring);
 }
-.card-detail-inner.flipped { transform: rotateY(180deg); }
+.card-detail-inner.flipped {
+  transform: rotateY(180deg);
+  filter: drop-shadow(-4px 0 16px rgba(0,0,0,0.3));
+}
 .card-detail-face {
   position: absolute;
   inset: 0;
@@ -905,9 +935,22 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   padding: var(--space-5);
+  padding-bottom: 0;
   overflow-y: auto;
+  position: relative;
 }
-.card-back-section { margin-bottom: var(--space-4); }
+.card-detail-back::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(transparent, var(--color-surface));
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.card-back-section { margin-bottom: var(--space-5); }
 .card-back-label {
   font-size: var(--text-xs);
   font-weight: var(--weight-semi);
@@ -925,7 +968,7 @@ img { display: block; max-width: 100%; }
   background: transparent;
   width: 100%;
   resize: none;
-  min-height: 60px;
+  min-height: 80px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: var(--space-2);
@@ -995,10 +1038,10 @@ img { display: block; max-width: 100%; }
 
 /* Listen On */
 .listen-on-row {
-  display: flex;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: var(--space-2);
   align-items: center;
-  flex-wrap: wrap;
 }
 .listen-on-btn {
   display: flex;
@@ -1027,7 +1070,12 @@ img { display: block; max-width: 100%; }
   flex-wrap: wrap;
   margin-top: auto;
   padding-top: var(--space-3);
+  padding-bottom: var(--space-4);
   border-top: 1px solid var(--color-border-subtle);
+  position: sticky;
+  bottom: 0;
+  background: var(--color-surface);
+  z-index: 2;
 }
 .card-action-btn {
   padding: 8px 14px;
@@ -1053,7 +1101,7 @@ img { display: block; max-width: 100%; }
   z-index: var(--z-modal);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-small) var(--ease-micro);
+  transition: opacity var(--dur-medium) var(--ease-standard);
 }
 .action-sheet-overlay.show { opacity: 1; pointer-events: all; }
 .action-sheet {
@@ -1107,9 +1155,9 @@ img { display: block; max-width: 100%; }
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(14,14,16,0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(14,14,16,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: var(--z-toast);
   display: flex;
   align-items: center;
@@ -1117,12 +1165,12 @@ img { display: block; max-width: 100%; }
   padding: var(--space-6);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-small) var(--ease-micro);
+  transition: opacity 300ms var(--ease-standard);
 }
 .confirm-overlay.show { opacity: 1; pointer-events: all; }
 .confirm-overlay .confirm-dialog {
   transform: scale(0.9) translateY(8px);
-  transition: transform var(--dur-medium) var(--ease-spring);
+  transition: transform 300ms var(--ease-spring);
 }
 .confirm-overlay.show .confirm-dialog {
   transform: scale(1) translateY(0);
@@ -1382,7 +1430,7 @@ img { display: block; max-width: 100%; }
 .share-deck-btn:hover { border-color: var(--color-gold); color: var(--color-gold); }
 
 /* ═══ PROFILE TAB ═══ */
-#tab-profile { padding: var(--space-4) var(--space-4) 100px; }
+#tab-profile { padding: var(--space-4) var(--space-4) var(--space-6); }
 .profile-header {
   padding: var(--space-6) 0 var(--space-6);
   text-align: center;
@@ -1516,7 +1564,7 @@ img { display: block; max-width: 100%; }
   z-index: var(--z-toast);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--dur-small) var(--ease-micro);
+  transition: opacity var(--dur-medium) var(--ease-standard);
 }
 .deck-picker-overlay.show { opacity: 1; pointer-events: all; }
 .deck-picker {
@@ -1576,10 +1624,12 @@ img { display: block; max-width: 100%; }
 /* ═══ TOAST ═══ */
 .toast {
   position: fixed;
-  bottom: 80px;
+  bottom: 90px;
   left: 50%;
-  transform: translateX(-50%) translateY(16px) scale(0.95);
-  background: var(--color-surface-raised);
+  transform: translateX(-50%) translateY(12px) scale(0.95);
+  background: rgba(34, 34, 38, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border-subtle);
   color: var(--color-text-primary);
   padding: 12px 24px;
@@ -1589,8 +1639,8 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--shadow-lg);
   z-index: var(--z-toast);
   opacity: 0;
-  transition: opacity var(--dur-small) var(--ease-standard), 
-              transform var(--dur-small) var(--ease-spring);
+  transition: opacity 250ms var(--ease-spring), 
+              transform 250ms var(--ease-spring);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -1669,22 +1719,21 @@ img { display: block; max-width: 100%; }
   left: 50%;
   transform: translateX(-50%) scaleX(0);
   width: 16px;
-  height: 2px;
-  border-radius: 1px;
+  height: 2.5px;
+  border-radius: 1.5px;
   background: var(--color-gold);
-  transition: transform var(--dur-small) var(--ease-spring);
+  box-shadow: none;
+  transition: transform var(--dur-small) var(--ease-spring), box-shadow var(--dur-small) var(--ease-standard);
 }
 .nav-tab.active::after {
   transform: translateX(-50%) scaleX(1);
+  box-shadow: 0 0 6px rgba(201,168,76,0.3), 0 0 12px rgba(201,168,76,0.12);
 }
 
-/* Grid card hover lift — enhanced */
-.grid-card {
-  will-change: transform;
-}
+/* Grid card interaction — rebound effect */
 .grid-card:active {
   transform: scale(0.97);
-  transition: transform 100ms ease;
+  transition: transform 80ms ease-out;
 }
 
 /* Search result tap feedback */
@@ -1726,8 +1775,8 @@ img { display: block; max-width: 100%; }
 /* ═══ KEYFRAMES ═══ */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeInUp { 
-  from { opacity: 0; transform: translateY(20px); } 
-  to { opacity: 1; transform: translateY(0); } 
+  from { opacity: 0; transform: translateY(16px) scale(0.95); } 
+  to { opacity: 1; transform: translateY(0) scale(1); } 
 }
 @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 @keyframes pulse-gold {
@@ -1764,19 +1813,43 @@ img { display: block; max-width: 100%; }
   justify-content: center;
 }
 .onboard-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-border);
   transition: all 400ms ease;
+  position: relative;
+}
+.onboard-dot + .onboard-dot::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  background: var(--color-border);
+  transform: translateY(-50%);
 }
 .onboard-dot.active {
   background: var(--color-gold);
   box-shadow: 0 0 8px rgba(201,168,76,0.4);
+  animation: dotRipple 2s ease infinite;
 }
 .onboard-dot.done {
-  background: transparent;
-  border: 1.5px solid var(--color-gold);
+  background: var(--color-gold);
+  transform: scale(1);
+  animation: dotFillIn 300ms var(--ease-spring);
+}
+.onboard-dot.done + .onboard-dot::before {
+  background: var(--color-gold);
+}
+@keyframes dotRipple {
+  0% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+}
+@keyframes dotFillIn {
+  from { transform: scale(0.5); } to { transform: scale(1); }
 }
 
 /* ═══ ONBOARDING RESULT ITEM IMPROVEMENTS ═══ */
@@ -1789,6 +1862,7 @@ img { display: block; max-width: 100%; }
   transition: background var(--dur-micro) var(--ease-micro), transform 120ms ease, border-color 300ms ease;
   min-height: 56px;
   border-radius: var(--radius-sm);
+  position: relative;
   border: 1px solid transparent;
   opacity: 0;
   transform: translateY(8px);
@@ -2049,6 +2123,67 @@ img { display: block; max-width: 100%; }
 }
 .onboard-final-card:first-child { margin-left: 0; }
 .onboard-final-card img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Shimmer particles for logo moment */
+.onboard-shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.shimmer-particle {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  opacity: 0;
+  animation: shimmerFloat 2s ease-out forwards;
+}
+@keyframes shimmerFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  20% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-120px) scale(0.2); }
+}
+
+/* Gold flash for final reveal */
+.onboard-gold-flash {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.25) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 600ms ease;
+}
+.onboard-gold-flash.pulse {
+  opacity: 1;
+  animation: goldFlashPulse 1s ease-out forwards;
+}
+@keyframes goldFlashPulse {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* Selection celebration glow */
+.onboard-result-item.selected::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-sm);
+  background: radial-gradient(ellipse, rgba(201,168,76,0.2) 0%, transparent 70%);
+  opacity: 0;
+  animation: selectionGlow 400ms ease-out;
+}
+@keyframes selectionGlow {
+  0% { opacity: 0; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
 
 /* ── DECK MANAGEMENT ── */
 .deck-view-actions {
@@ -3047,12 +3182,35 @@ function getStreamingLinks(card) {
 }
 
 // ── TAB NAVIGATION ──
+const _tabScrollPositions = {};
+
 function switchTab(tab, force = false) {
   const prev = currentTab;
+  const contentArea = document.getElementById('content-area');
+  
+  // Tap-to-scroll-top: if tapping already-active tab, smooth scroll to top
   if (prev === tab && !force) {
     const tabEl = document.getElementById(`tab-${tab}`);
-    if (tabEl && tabEl.classList.contains('active')) return;
+    if (tabEl && tabEl.classList.contains('active')) {
+      if (contentArea && contentArea.scrollTop > 0) {
+        contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+        // Pulse the nav icon to acknowledge
+        const navBtn = document.querySelector(`.nav-tab[data-tab="${tab}"]`);
+        if (navBtn) {
+          navBtn.style.transform = 'scale(0.92)';
+          setTimeout(() => { navBtn.style.transform = ''; }, 120);
+        }
+        haptic('light');
+      }
+      return;
+    }
   }
+
+  // Save current tab's scroll position before switching
+  if (prev && contentArea) {
+    _tabScrollPositions[prev] = contentArea.scrollTop;
+  }
+
   currentTab = tab;
   haptic('selection');
   logEvent('tab_switched', { from: prev, to: tab });
@@ -3070,9 +3228,16 @@ function switchTab(tab, force = false) {
   }
   document.querySelector(`.nav-tab[data-tab="${tab}"]`)?.classList.add('active');
 
-  // Scroll content area to top on tab switch
-  const contentArea = document.getElementById('content-area');
-  if (contentArea) contentArea.scrollTop = 0;
+  // Restore scroll position for this tab (or go to top if no saved position)
+  if (contentArea) {
+    const savedPos = _tabScrollPositions[tab] || 0;
+    // Temporarily disable smooth scroll for instant restore
+    contentArea.style.scrollBehavior = 'auto';
+    contentArea.scrollTop = savedPos;
+    requestAnimationFrame(() => {
+      contentArea.style.scrollBehavior = '';
+    });
+  }
 
   try {
   if (tab === 'collection') renderCollection();
@@ -3093,6 +3258,43 @@ function switchTab(tab, force = false) {
   } catch(e) { console.error('Tab switch error:', e); }
 }
 
+// ── NAV AUTO-HIDE ON SCROLL ──
+(function initNavAutoHide() {
+  let lastScrollY = 0;
+  let lastScrollTime = 0;
+  let hideTimeout = null;
+  const nav = document.getElementById('bottom-nav');
+  const contentArea = document.getElementById('content-area');
+  if (!contentArea || !nav) return;
+
+  contentArea.addEventListener('scroll', function() {
+    const currentY = contentArea.scrollTop;
+    const now = Date.now();
+    const dt = now - lastScrollTime;
+    const dy = currentY - lastScrollY;
+    const velocity = dt > 0 ? Math.abs(dy / dt) : 0;
+
+    if (dy > 0 && velocity > 0.8 && currentY > 100) {
+      // Scrolling down fast — hide nav
+      nav.classList.add('nav-hidden');
+      clearTimeout(hideTimeout);
+    } else if (dy < 0) {
+      // Scrolling up — show nav
+      nav.classList.remove('nav-hidden');
+      clearTimeout(hideTimeout);
+    }
+
+    // Safety: always show after pause
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+      nav.classList.remove('nav-hidden');
+    }, 800);
+
+    lastScrollY = currentY;
+    lastScrollTime = now;
+  }, { passive: true });
+})();
+
 // ── ONBOARDING ──
 async function startOnboarding() {
   if (settings.onboardingCompleted || settings.onboardingSkipped) {
@@ -3105,15 +3307,26 @@ async function startOnboarding() {
   logEvent('onboarding_started');
   const content = document.getElementById('onboardContent');
 
-  // Step 1: Wordmark
+  // Step 1: Wordmark with shimmer
   content.innerHTML = `
-  <div class="onboard-wordmark" id="obWordmark">
-<img src="heard-drive-lockup.png" alt="heard." style="height:240px;width:auto;filter:brightness(0) invert(1);opacity:0.95;">
+  <div class="onboard-wordmark" id="obWordmark" style="position:relative;">
+    <img src="heard-drive-lockup.png" alt="heard." style="height:240px;width:auto;filter:brightness(0) invert(1);opacity:0.95;">
+    <div class="onboard-shimmer" id="obShimmer"></div>
   </div>
   <div class="onboard-tagline" id="obTagline"></div>`;
-  await sleep(100);
+  await sleep(200);
   document.getElementById('obWordmark').classList.add('show');
-  await sleep(900);
+  // Trigger shimmer particles
+  const shimmer = document.getElementById('obShimmer');
+  if (shimmer) {
+    for (let p = 0; p < 12; p++) {
+      const dot = document.createElement('span');
+      dot.className = 'shimmer-particle';
+      dot.style.cssText = `left:${20+Math.random()*60}%;animation-delay:${Math.random()*1.2}s;animation-duration:${1.5+Math.random()}s;`;
+      shimmer.appendChild(dot);
+    }
+  }
+  await sleep(1000);
 
   // Step 2: Tagline typewriter
   const tagline = 'you heard it. now keep it.';
@@ -3122,12 +3335,14 @@ async function startOnboarding() {
     tagEl.textContent += tagline[i];
     await sleep(30);
   }
-  await sleep(1200);
+  await sleep(1800);
 
-  // Step 3: Transition to prompt intro
-  content.style.transition = 'opacity 600ms ease';
+  // Step 3: Cinematic transition — drift up and fade
+  content.style.transition = 'opacity 600ms ease, transform 600ms ease';
+  content.style.transform = 'translateY(-12px)';
   content.style.opacity = '0';
   await sleep(600);
+  content.style.transform = '';
 
   // Clear completely before rebuilding
   content.innerHTML = '';
@@ -3146,12 +3361,15 @@ async function startOnboarding() {
     logEvent('onboarding_prompt_shown', { promptIndex: i, promptText: ONBOARDING_PROMPTS[i] });
     const startTime = Date.now();
 
-    // Fade out current content completely
+    // Cinematic slide-fade out
+    content.style.transition = 'opacity 400ms ease, transform 400ms ease';
+    content.style.transform = 'translateY(-20px)';
     content.style.opacity = '0';
     await sleep(400);
 
     // CRITICAL: Complete cleanup between prompts
     content.innerHTML = '';
+    content.style.transform = 'translateY(20px)';
 
     // Build progress dots HTML
     const dotsHtml = [0,1,2,3,4].map(idx => {
@@ -3174,7 +3392,10 @@ async function startOnboarding() {
       <div class="onboard-results" id="obResults"></div>
       <div class="onboard-stack" id="obStack">${stackHtml}</div>
     `;
+    // Slide-fade in from below
+    content.style.transition = 'opacity 400ms ease, transform 400ms ease';
     content.style.opacity = '1';
+    content.style.transform = 'translateY(0)';
 
     // Staggered entrance animations
     await sleep(100);
@@ -3238,14 +3459,18 @@ async function startOnboarding() {
     }
   }
 
-  // Step 5: Fan out and reveal
+  // Step 5: Fan out and reveal — cinematic
   haptic('success');
+  content.style.transition = 'opacity 400ms ease, transform 400ms ease';
+  content.style.transform = 'translateY(-20px)';
   content.style.opacity = '0';
   await sleep(400);
   content.innerHTML = '';
+  content.style.transform = '';
 
   const fanAngles = [-12, -6, 0, 6, 12];
   content.innerHTML = `
+    <div class="onboard-gold-flash" id="obGoldFlash"></div>
     <div class="onboard-stack" id="obFinalStack" style="gap:0;align-items:center;">
       ${pickedCards.map((c, i) => `
         <div class="onboard-final-card" style="--fan-angle:${fanAngles[i]}deg;animation-delay:${i * 100}ms;">
@@ -3256,7 +3481,11 @@ async function startOnboarding() {
     <div class="onboard-final-text" id="obFinalText">5 songs. 5 memories. your collection starts now.</div>
   `;
   content.style.opacity = '1';
-  await sleep(1200);
+  // Gold flash pulse at the peak moment
+  await sleep(400);
+  const goldFlash = document.getElementById('obGoldFlash');
+  if (goldFlash) goldFlash.classList.add('pulse');
+  await sleep(1000);
 
   // Create "My First Deck"
   const deckId = uuid();
@@ -3275,7 +3504,7 @@ async function startOnboarding() {
   });
 
   document.getElementById('obFinalText').classList.add('show');
-  await sleep(2500);
+  await sleep(3000);
 
   settings.onboardingCompleted = true;
   await saveSettings();
@@ -3354,7 +3583,7 @@ let _scrollObserver = null;
 
 function renderCardHTML(card, idx) {
   return `
-    <div class="grid-card" data-id="${card.id}" style="animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 40, 300)}ms both;"
+    <div class="grid-card" data-id="${card.id}" style="animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both;"
          onclick="openCardDetail('${card.id}')"
          oncontextmenu="event.preventDefault(); openActionSheet('${card.id}')"
          ontouchstart="startLongPress(event, '${card.id}')"
@@ -3431,7 +3660,7 @@ function renderCollection() {
         renderNextBatch();
       }
     });
-  }, { rootMargin: '200px' });
+  }, { root: document.getElementById('content-area'), rootMargin: '200px' });
 
   // Render first batch
   renderNextBatch();
@@ -4296,7 +4525,7 @@ function openDeckView(deckId) {
 
   const grid = document.getElementById('deckCardGrid');
   grid.innerHTML = actionsHtml + cards.map((card, idx) => `
-    <div class="grid-card" data-id="${card.id}" style="animation: fadeInUp 400ms var(--ease-standard) ${idx * 40}ms both; position:relative;"
+    <div class="grid-card" data-id="${card.id}" style="animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both; position:relative;"
          onclick="openCardDetail('${card.id}')"
          oncontextmenu="event.preventDefault(); openActionSheet('${card.id}')">
       ${!deck.isSmart ? `<div class="deck-card-controls">
@@ -4845,7 +5074,7 @@ async function openSharedDeck(deckData) {
   ordered.forEach((track, idx) => {
     const art = (track.artworkUrl100 || '').replace('100x100', '300x300');
     gridHtml += `
-      <div class="grid-card" style="animation: fadeInUp 400ms var(--ease-standard) ${idx * 40}ms both;">
+      <div class="grid-card" style="animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both;">
         <div class="grid-card-art-wrap">
           <img class="grid-card-art" src="${art}" alt="${escHtml(track.trackName)}" loading="lazy">
           <div class="grid-card-gradient" style="background:linear-gradient(to top, #1A1A1E 0%, transparent 100%);"></div>
