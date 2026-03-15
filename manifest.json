@@ -1,0 +1,30 @@
+{
+  "name": "heard. — collect the songs you'll never forget",
+  "short_name": "heard.",
+  "description": "A music collecting app. Search songs, create cards, build decks.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E0E10",
+  "theme_color": "#0E0E10",
+  "icons": [
+    {
+      "src": "heard-drive-symbol.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "heard-drive-symbol.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "heard-drive-symbol.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["music", "entertainment"],
+  "lang": "en"
+}
