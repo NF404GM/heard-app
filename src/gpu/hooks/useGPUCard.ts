@@ -115,7 +115,8 @@ export function useGPUCard(input: UseGPUCardInput): UseGPUCardOutput {
   const effectTier = useEffectTier();
 
   // Color extraction (System 1)
-  const { palette, isExtracting } = useColorExtraction(card.coverArtUrl);
+  // Pass existing palette from card data to avoid web-only Image API on native
+  const { palette, isExtracting } = useColorExtraction(card.coverArtUrl, card.palette);
 
   // Card flip (System 2)
   const { triggerFlip, flipProgress, particles } = useCardFlip(palette);

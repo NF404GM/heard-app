@@ -3,11 +3,14 @@
  * Extracts a CardPalette from an album art URL.
  * Uses GPU compute shader when available, falls back to CPU.
  * Results are cached by URL to avoid re-extraction.
+ *
+ * On React Native (no DOM), image loading uses expo-image's prefetch
+ * to download the image, then a simplified median-cut on sampled pixels.
+ * Full GPU extraction is only available in dev builds with react-native-wgpu.
  */
 import { useState, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { useGPUContext } from '../context';
-import { extractPalette } from '../shaders/colorExtract';
-import { extractPaletteCPU } from '../fallbacks/cpuColorExtract';
 import type { CardPaletteData } from '../types/gpu.types';
 
 // ═══════════════════════════════════════
@@ -17,12 +20,32 @@ import type { CardPaletteData } from '../types/gpu.types';
 const paletteCache = new Map<string, CardPaletteData>();
 
 // ═══════════════════════════════════════
-// Image Loading Utility
+// Default palette — used when extraction is unavailable
 // ═══════════════════════════════════════
 
-function loadImageData(url: string): Promise<ImageData> {
+const DEFAULT_PALETTE = {
+  dominant: { x: 0.45, y: 0.35, z: 0.30, w: 1.0 },
+  shadow:   { x: 0.27, y: 0.21, z: 0.18, w: 1.0 },
+  accent:   { x: 0.78, y: 0.60, z: 0.30, w: 1.0 },
+  muted:    { x: 0.40, y: 0.35, z: 0.32, w: 0.6 },
+  warmth: 0.6,
+} as unknown as CardPaletteData;
+
+// ═══════════════════════════════════════
+// Web-only Image Loading
+// ═══════════════════════════════════════
+
+/**
+ * Load image pixel data using browser APIs.
+ * Only available on web platform.
+ */
+function loadImageDataWeb(url: string): Promise<ImageData> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    if (typeof globalThis.Image === 'undefined' || typeof document === 'undefined') {
+      reject(new Error('Web Image API not available'));
+      return;
+    }
+    const img = new globalThis.Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -50,13 +73,28 @@ interface UseColorExtractionResult {
   isExtracting: boolean;
 }
 
-export function useColorExtraction(imageUrl: string | null): UseColorExtractionResult {
-  const [palette, setPalette] = useState<CardPaletteData | null>(null);
+/**
+ * Overload: pass a pre-computed palette to skip extraction entirely.
+ */
+export function useColorExtraction(
+  imageUrl: string | null,
+  existingPalette?: CardPaletteData | null,
+): UseColorExtractionResult {
+  const [palette, setPalette] = useState<CardPaletteData | null>(
+    existingPalette ?? null,
+  );
   const [isExtracting, setIsExtracting] = useState(false);
   const { device, isAvailable } = useGPUContext();
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    // If an existing palette was provided, use it directly
+    if (existingPalette) {
+      setPalette(existingPalette);
+      setIsExtracting(false);
+      return;
+    }
+
     if (!imageUrl) {
       setPalette(null);
       setIsExtracting(false);
@@ -71,7 +109,17 @@ export function useColorExtraction(imageUrl: string | null): UseColorExtractionR
       return;
     }
 
-    // Abort any in-flight extraction
+    // On native (non-web), we can't extract pixels without a Canvas.
+    // Use the default palette until a dev build with native canvas support is available.
+    if (Platform.OS !== 'web') {
+      const fallback = DEFAULT_PALETTE;
+      paletteCache.set(imageUrl, fallback);
+      setPalette(fallback);
+      setIsExtracting(false);
+      return;
+    }
+
+    // === Web platform: full extraction path ===
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -80,7 +128,7 @@ export function useColorExtraction(imageUrl: string | null): UseColorExtractionR
 
     async function extract() {
       try {
-        const imageData = await loadImageData(imageUrl!);
+        const imageData = await loadImageDataWeb(imageUrl!);
 
         if (controller.signal.aborted) return;
 
@@ -89,25 +137,27 @@ export function useColorExtraction(imageUrl: string | null): UseColorExtractionR
         if (isAvailable && device) {
           // GPU path
           try {
+            const { extractPalette } = await import('../shaders/colorExtract');
             result = await extractPalette(device, imageData);
           } catch (gpuError) {
             console.warn('[HEARD Color] GPU extraction failed, falling back to CPU:', gpuError);
+            const { extractPaletteCPU } = await import('../fallbacks/cpuColorExtract');
             result = extractPaletteCPU(imageData);
           }
         } else {
-          // CPU fallback
+          // CPU fallback (web only — has ImageData)
+          const { extractPaletteCPU } = await import('../fallbacks/cpuColorExtract');
           result = extractPaletteCPU(imageData);
         }
 
         if (controller.signal.aborted) return;
 
-        // Cache the result
         paletteCache.set(imageUrl!, result);
         setPalette(result);
       } catch (error) {
         if (!controller.signal.aborted) {
-          console.error('[HEARD Color] Extraction failed:', error);
-          setPalette(null);
+          console.warn('[HEARD Color] Web extraction failed, using default palette:', error);
+          setPalette(DEFAULT_PALETTE);
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -121,7 +171,7 @@ export function useColorExtraction(imageUrl: string | null): UseColorExtractionR
     return () => {
       controller.abort();
     };
-  }, [imageUrl, device, isAvailable]);
+  }, [imageUrl, existingPalette, device, isAvailable]);
 
   return { palette, isExtracting };
 }

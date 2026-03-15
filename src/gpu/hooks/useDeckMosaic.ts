@@ -11,6 +11,7 @@
  *   const { canvasRef, deckPalette } = useDeckMosaic(coverUrls, scrollOffset);
  */
 import { useRef, useEffect, useState, useMemo } from 'react';
+import { Platform } from 'react-native';
 import { useGPUContext, useEffectTier } from '../context';
 import {
   createDeckMosaicPipeline,
@@ -57,6 +58,9 @@ export function useDeckMosaic(
   const { device } = useGPUContext();
   const effectTier = useEffectTier();
 
+  // Deck mosaic uses web Image/Canvas APIs — bail on native
+  const isNative = Platform.OS !== 'web';
+
   const resourcesRef = useRef<DeckMosaicResources | null>(null);
   const bindGroupRef = useRef<GPUBindGroup | null>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
@@ -76,14 +80,15 @@ export function useDeckMosaic(
   const gridCols = cellCount <= 1 ? 1 : cellCount <= 4 ? 2 : cellCount <= 9 ? 3 : 4;
   const gridRows = Math.ceil(cellCount / gridCols);
 
-  // Load cover images
+  // Load cover images (web only — uses browser Image constructor)
   useEffect(() => {
+    if (isNative) return;
     let cancelled = false;
     const urls = covers.slice(0, MAX_CELLS).map((c) => c.url);
 
     const promises = urls.map((url) => {
       return new Promise<HTMLImageElement>((resolve) => {
-        const img = new Image();
+        const img = new (globalThis.Image as any)();
         img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img);
         img.onerror = () => resolve(img); // still resolve — use blank
@@ -99,7 +104,7 @@ export function useDeckMosaic(
     });
 
     return () => { cancelled = true; };
-  }, [covers]);
+  }, [covers, isNative]);
 
   // Scroll-driven re-render
   useEffect(() => {
