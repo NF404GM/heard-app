@@ -372,10 +372,10 @@ export function deriveDeckPalette(palettes: CardPaletteData[]): CardPaletteData 
 
   const n = palettes.length;
   return {
-    dominant: { x: avgDominant.x / n, y: avgDominant.y / n, z: avgDominant.z / n, w: 1 },
-    shadow: { x: avgShadow.x / n, y: avgShadow.y / n, z: avgShadow.z / n, w: 1 },
+    dominant: { x: avgDominant.x / n, y: avgDominant.y / n, z: avgDominant.z / n, w: 1 } as CardPaletteData['dominant'],
+    shadow: { x: avgShadow.x / n, y: avgShadow.y / n, z: avgShadow.z / n, w: 1 } as CardPaletteData['shadow'],
     accent: bestAccent,
-    muted: { x: avgMuted.x / n, y: avgMuted.y / n, z: avgMuted.z / n, w: 1 },
+    muted: { x: avgMuted.x / n, y: avgMuted.y / n, z: avgMuted.z / n, w: 1 } as CardPaletteData['muted'],
     warmth: avgWarmth / n,
   };
 }

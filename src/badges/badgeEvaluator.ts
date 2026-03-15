@@ -234,9 +234,9 @@ export function evaluateBadges(
 
     slots.push({
       badgeId,
-      position: { x: layoutSlot.position.x, y: layoutSlot.position.y },
+      position: { x: layoutSlot.position.x, y: layoutSlot.position.y } as BadgeSlotData['position'],
       scale: layoutSlot.isOverflow ? 0.8 : 1.0,
-      color: badgeColor(badgeId, card, palette),
+      color: badgeColor(badgeId, card, palette) as BadgeSlotData['color'],
       animPhase: i * 0.3, // stagger animations by 0.3s per badge
       visible: 1,
     });

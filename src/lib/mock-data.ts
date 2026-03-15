@@ -9,10 +9,10 @@ function palette(
   warmth: number,
 ): CardPaletteData {
   return {
-    dominant: { x: dominant[0], y: dominant[1], z: dominant[2], w: 1.0 },
-    shadow: { x: shadow[0], y: shadow[1], z: shadow[2], w: 1.0 },
-    accent: { x: accent[0], y: accent[1], z: accent[2], w: 1.0 },
-    muted: { x: muted[0], y: muted[1], z: muted[2], w: 0.6 },
+    dominant: { x: dominant[0], y: dominant[1], z: dominant[2], w: 1.0 } as CardPaletteData['dominant'],
+    shadow: { x: shadow[0], y: shadow[1], z: shadow[2], w: 1.0 } as CardPaletteData['shadow'],
+    accent: { x: accent[0], y: accent[1], z: accent[2], w: 1.0 } as CardPaletteData['accent'],
+    muted: { x: muted[0], y: muted[1], z: muted[2], w: 0.6 } as CardPaletteData['muted'],
     warmth,
   };
 }

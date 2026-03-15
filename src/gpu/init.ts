@@ -32,7 +32,7 @@ export async function initGPU(): Promise<GPUDevice | null> {
     }
 
     // Log adapter info for debugging
-    const info = await adapter.requestAdapterInfo?.();
+    const info = (adapter as any).requestAdapterInfo ? await (adapter as any).requestAdapterInfo() : adapter.info;
     if (info) {
       console.log(`[HEARD GPU] Adapter: ${info.vendor} ${info.device}`);
     }

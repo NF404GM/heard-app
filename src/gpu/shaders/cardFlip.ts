@@ -191,8 +191,8 @@ export class FlipParticleSystem {
       const alphaVariation = 0.5 + Math.random() * 0.5;
 
       this.particles.push({
-        position: { x: px, y: py },
-        velocity: { x: vx, y: vy },
+        position: { x: px, y: py } as ParticleData['position'],
+        velocity: { x: vx, y: vy } as ParticleData['velocity'],
         life: 1.0,
         size: 2.0 + Math.random() * 3.0,
         color: {
@@ -200,7 +200,7 @@ export class FlipParticleSystem {
           y: this.accentColor.y,
           z: this.accentColor.z,
           w: alphaVariation,
-        },
+        } as ParticleData['color'],
       });
     }
 
@@ -313,11 +313,11 @@ export class FlipParticleSystem {
     for (let i = 0; i < this.particles.length; i++) {
       const offset = i * (PARTICLE_STRIDE / 4);
       this.particles[i] = {
-        position: { x: result[offset], y: result[offset + 1] },
-        velocity: { x: result[offset + 2], y: result[offset + 3] },
+        position: { x: result[offset], y: result[offset + 1] } as ParticleData['position'],
+        velocity: { x: result[offset + 2], y: result[offset + 3] } as ParticleData['velocity'],
         life: result[offset + 4],
         size: result[offset + 5],
-        color: { x: result[offset + 6], y: result[offset + 7], z: result[offset + 8], w: result[offset + 9] },
+        color: { x: result[offset + 6], y: result[offset + 7], z: result[offset + 8], w: result[offset + 9] } as ParticleData['color'],
       };
     }
   }

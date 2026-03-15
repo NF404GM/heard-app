@@ -295,7 +295,7 @@ export class WaveformRenderer {
     }
 
     // Upload waveform data
-    device.queue.writeBuffer(this.resources.sampleBuffer, 0, this.waveformData);
+    device.queue.writeBuffer(this.resources.sampleBuffer, 0, this.waveformData as unknown as BufferSource);
   }
 
   /**
@@ -368,7 +368,7 @@ export class WaveformRenderer {
     this.resources.device.queue.writeBuffer(
       this.resources.sampleBuffer,
       0,
-      this.waveformData,
+      this.waveformData as unknown as BufferSource,
     );
   }
 

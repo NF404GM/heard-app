@@ -298,7 +298,7 @@ export async function extractPalette(
   const resized = resizeImageData(imageData, TEXTURE_SIZE, TEXTURE_SIZE);
   device.queue.writeTexture(
     { texture },
-    resized,
+    resized as unknown as BufferSource,
     { bytesPerRow: TEXTURE_SIZE * 4 },
     [TEXTURE_SIZE, TEXTURE_SIZE],
   );
@@ -378,10 +378,10 @@ export async function extractPalette(
   // Parse CardPalette from float array
   // Layout: dominant(4f) shadow(4f) accent(4f) muted(4f) warmth(1f)
   const palette: CardPaletteData = {
-    dominant: { x: data[0], y: data[1], z: data[2], w: data[3] },
-    shadow: { x: data[4], y: data[5], z: data[6], w: data[7] },
-    accent: { x: data[8], y: data[9], z: data[10], w: data[11] },
-    muted: { x: data[12], y: data[13], z: data[14], w: data[15] },
+    dominant: { x: data[0], y: data[1], z: data[2], w: data[3] } as CardPaletteData['dominant'],
+    shadow: { x: data[4], y: data[5], z: data[6], w: data[7] } as CardPaletteData['shadow'],
+    accent: { x: data[8], y: data[9], z: data[10], w: data[11] } as CardPaletteData['accent'],
+    muted: { x: data[12], y: data[13], z: data[14], w: data[15] } as CardPaletteData['muted'],
     warmth: data[16],
   };
 

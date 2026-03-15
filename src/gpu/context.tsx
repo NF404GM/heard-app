@@ -80,7 +80,7 @@ export function GPUProvider({ children }: GPUProviderProps) {
 
   // Monitor battery level
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
 
     async function checkBattery() {
       try {

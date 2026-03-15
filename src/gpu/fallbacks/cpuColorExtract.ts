@@ -206,10 +206,10 @@ export function extractPaletteCPU(imageData: ImageData): CardPaletteData {
   const warmth = totalCount > 0 ? warmCount / totalCount : 0.5;
 
   return {
-    dominant: { x: domR, y: domG, z: domB, w: 1.0 },
-    shadow: { x: shadowR, y: shadowG, z: shadowB, w: 1.0 },
-    accent: { x: accR, y: accG, z: accB, w: 1.0 },
-    muted: { x: mutedR, y: mutedG, z: mutedB, w: 1.0 },
+    dominant: { x: domR, y: domG, z: domB, w: 1.0 } as CardPaletteData['dominant'],
+    shadow: { x: shadowR, y: shadowG, z: shadowB, w: 1.0 } as CardPaletteData['shadow'],
+    accent: { x: accR, y: accG, z: accB, w: 1.0 } as CardPaletteData['accent'],
+    muted: { x: mutedR, y: mutedG, z: mutedB, w: 1.0 } as CardPaletteData['muted'],
     warmth,
   };
 }

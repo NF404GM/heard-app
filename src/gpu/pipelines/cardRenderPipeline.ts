@@ -13,7 +13,6 @@
  *   Output: Final composited card texture → display
  */
 
-import type { GPUDevice } from 'react-native-wgpu';
 import type {
   CardPaletteData,
   FrameTier,
