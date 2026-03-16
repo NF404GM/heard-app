@@ -38,7 +38,7 @@ Just open `index.html` in any browser. No server required.
 
 ## Version
 
-v1.5 — Phase 1 Web Beta
+v1.8.1 — Phase 1 Web Beta
 
 ## License
 

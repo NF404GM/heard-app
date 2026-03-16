@@ -1,5 +1,5 @@
-// HEARD Service Worker v1.8
-const CACHE_NAME = 'heard-v1.8';
+// HEARD Service Worker v1.8.1
+const CACHE_NAME = 'heard-v1.8.1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
