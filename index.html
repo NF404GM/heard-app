@@ -89,7 +89,12 @@
   --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-full: 9999px;
-  --radius-card: 16px;
+  --radius-card: 24px;
+  --card-shell-top-inset: 12px;
+  --card-shell-side-inset: 14px;
+  --card-shell-bottom-inset: 14px;
+  --card-shell-chrome-bg: rgba(16,16,20,0.62);
+  --card-shell-chrome-border: rgba(240,238,233,0.08);
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
@@ -892,7 +897,7 @@ img { display: block; max-width: 100%; }
 /* Gallery View */
 .card-gallery { display: flex; flex-direction: column; gap: var(--space-4); padding-bottom: var(--space-4); }
 .gallery-card {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   overflow: hidden;
   cursor: pointer;
   position: relative;
@@ -1036,6 +1041,9 @@ img { display: block; max-width: 100%; }
   pointer-events: none;
   transition: opacity var(--dur-medium) var(--ease-standard);
 }
+.card-detail-overlay:not(.show) * {
+  pointer-events: none !important;
+}
 .card-detail-overlay.show { opacity: 1; pointer-events: all; }
 .card-detail-overlay .card-detail-container {
   transform: scale(0.85) translateY(24px);
@@ -1112,6 +1120,7 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--shadow-lift);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  pointer-events: none;
 }
 .card-detail-front {
   display: flex;
@@ -1119,6 +1128,10 @@ img { display: block; max-width: 100%; }
   z-index: 2;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+.card-detail-inner:not(.flipped) .card-detail-front,
+.card-detail-inner.flipped .card-detail-back {
+  pointer-events: auto;
 }
 .card-detail-front-art {
   width: 100%;
@@ -2237,7 +2250,7 @@ img { display: block; max-width: 100%; }
 /* Floating preview bar */
 .preview-bar {
   position: fixed;
-  bottom: 76px;
+  bottom: calc(var(--nav-clearance) + var(--space-2));
   left: 50%;
   transform: translateX(-50%) translateY(100px);
   width: calc(100% - 32px);
@@ -3383,6 +3396,788 @@ img { display: block; max-width: 100%; }
   .badge-scan-line::after { animation: none; }
 }
 
+/* ═══ FIGMA COLLECTOR PASS ═══ */
+body.detail-focus-mode #bottom-nav {
+  opacity: 0;
+  transform: translateY(120%);
+  pointer-events: none;
+}
+
+.collection-hero-copy {
+  margin: 2px 0 12px;
+}
+.collection-kicker {
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 5vw, 1.9rem);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+}
+.collection-subtitle {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin-top: 4px;
+}
+.collection-recent-section {
+  margin: 2px 0 14px;
+}
+.collection-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.collection-section-head span {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.collection-inline-action {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.collection-recent-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.collection-recent-strip::-webkit-scrollbar,
+.collection-mood-filters::-webkit-scrollbar,
+.search-trending::-webkit-scrollbar { display: none; }
+.recent-claim-card {
+  width: 110px;
+  flex: 0 0 110px;
+  aspect-ratio: 5 / 7;
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: 1px solid rgba(201,168,76,0.24);
+  background: var(--color-surface);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+  cursor: pointer;
+}
+.recent-claim-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.recent-claim-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,12,0.45) 0%, rgba(10,10,12,0.12) 28%, rgba(10,10,12,0.92) 100%);
+}
+.recent-claim-topline,
+.grid-card-shell-top,
+.gallery-card-shell-top,
+.card-detail-front-topline {
+  position: absolute;
+  top: var(--card-shell-top-inset);
+  left: var(--card-shell-side-inset);
+  right: var(--card-shell-side-inset);
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-display);
+}
+.recent-claim-brand,
+.grid-card-brand,
+.gallery-card-brand,
+.card-detail-front-brand {
+  color: var(--color-gold);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: lowercase;
+}
+.recent-claim-number,
+.grid-card-number,
+.gallery-card-number,
+.card-detail-front-number {
+  color: rgba(240,238,233,0.45);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.recent-claim-info {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+}
+.recent-claim-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  line-height: 1.05;
+}
+.recent-claim-artist {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 10px;
+  color: rgba(240,238,233,0.68);
+  margin-top: 2px;
+}
+.collection-mood-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.mood-filter-chip {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-subtle);
+  background: rgba(26,26,30,0.82);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--dur-micro) var(--ease-micro);
+}
+.mood-filter-chip.active {
+  border-color: rgba(201,168,76,0.38);
+  color: var(--color-gold);
+  background: rgba(201,168,76,0.08);
+}
+
+:where(.grid-card, .gallery-card, .deck-stack-face, .deck-stack-layer, .card-detail-container, .card-detail-face, .card-creation-card, .card-creation-card .card-face) {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+:where(.grid-card, .gallery-card, .deck-stack-face, .card-detail-face) {
+  isolation: isolate;
+}
+.grid-card {
+  background: #141418;
+  border: 1px solid rgba(201,168,76,0.1);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+}
+.gallery-card,
+.deck-stack-face,
+.card-detail-face {
+  background: #141418;
+  border: 1px solid rgba(201,168,76,0.12);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+}
+.grid-card-art-wrap,
+.gallery-card,
+.recent-claim-card,
+.deck-stack-face,
+.deck-stack-layer,
+.card-detail-container,
+.card-detail-face {
+  border-radius: var(--radius-card);
+}
+.grid-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 18%, rgba(255,255,255,0.08) 46%, transparent 70%);
+  opacity: 0;
+  transform: translateX(-20%);
+  transition: opacity var(--dur-small) var(--ease-standard), transform var(--dur-medium) var(--ease-standard);
+  pointer-events: none;
+  z-index: 2;
+}
+.grid-card:active::after,
+.grid-card:hover::after {
+  opacity: 1;
+  transform: translateX(10%);
+}
+.grid-card-shell-top {
+  padding-right: 34px;
+}
+.gallery-card-shell-top {
+  padding-right: 34px;
+}
+.grid-card-info {
+  padding-top: 34px;
+}
+.gallery-card-info {
+  padding: calc(var(--card-shell-top-inset) + 28px) var(--card-shell-side-inset) var(--card-shell-bottom-inset);
+  z-index: 2;
+}
+.gallery-card-signal {
+  margin-top: 8px;
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 11px;
+  color: rgba(240,238,233,0.7);
+}
+.grid-card-info .title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+}
+.grid-card-info .artist {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 12px;
+  color: rgba(240,238,233,0.78);
+  margin-top: 2px;
+}
+.gallery-card .card-badges,
+.deck-stack-face .card-badges {
+  left: var(--card-shell-side-inset);
+  bottom: var(--card-shell-bottom-inset);
+}
+.card-detail-front .card-badges {
+  left: var(--card-shell-side-inset);
+  bottom: 72px;
+  z-index: 4;
+}
+.gallery-card-fav {
+  top: var(--card-shell-top-inset);
+  right: var(--card-shell-side-inset);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--card-shell-chrome-bg);
+  border: 1px solid var(--card-shell-chrome-border);
+  color: var(--color-gold);
+}
+.gallery-card-fav svg {
+  width: 16px;
+  height: 16px;
+  filter: none;
+}
+.grid-card-meta-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.grid-card-meta-pill {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.18);
+  color: var(--color-gold);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+.grid-card-moment {
+  font-size: 10px;
+  color: rgba(240,238,233,0.65);
+}
+.grid-card-fav {
+  background: rgba(10,10,12,0.52);
+  backdrop-filter: none;
+}
+
+.search-subtitle {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin-top: 4px;
+}
+.search-browse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.search-browse-card {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(201,168,76,0.12);
+  background: linear-gradient(180deg, rgba(30,30,36,0.94) 0%, rgba(20,20,24,0.98) 100%);
+}
+.search-browse-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: 8px;
+}
+.search-browse-copy {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.search-trending {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.search-trend-chip {
+  padding: 8px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(26,26,30,0.88);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-trend-chip strong {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semi);
+}
+.search-results {
+  gap: 10px;
+}
+.search-result-item {
+  padding: 12px;
+  border: 1px solid rgba(201,168,76,0.08);
+  border-radius: var(--radius-md);
+  background: rgba(26,26,30,0.72);
+  margin-bottom: 0;
+}
+.search-result-item:last-child { border-bottom: 1px solid rgba(201,168,76,0.08); }
+.search-result-item img {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  border: 1px solid rgba(201,168,76,0.16);
+}
+.search-result-pillrow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.search-result-pill {
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(201,168,76,0.18);
+  color: var(--color-gold);
+  background: rgba(201,168,76,0.08);
+  font-size: 9px;
+}
+.search-claim-btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.24);
+  color: var(--color-gold);
+  font-size: 11px;
+  font-weight: var(--weight-semi);
+  flex-shrink: 0;
+}
+.search-claim-btn.collected {
+  color: var(--color-text-secondary);
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.08);
+}
+
+.decks-kicker {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-text-tertiary);
+  margin-bottom: 4px;
+}
+.deck-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 14px;
+}
+@media (max-width: 420px) {
+  .deck-list { grid-template-columns: 1fr; }
+}
+.deck-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  min-height: auto;
+}
+.deck-card:hover { background: transparent; }
+.deck-stack-visual {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  margin-bottom: 2px;
+}
+.deck-stack-layer {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(201,168,76,0.14);
+  background: #1A1A1E;
+}
+.deck-stack-layer.back {
+  transform: rotate(5deg) translateY(7px);
+  opacity: 0.42;
+}
+.deck-stack-layer.middle {
+  transform: rotate(-2deg) translateY(3px);
+  opacity: 0.68;
+}
+.deck-stack-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgba(201,168,76,0.28);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.34);
+}
+.deck-stack-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.deck-stack-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,12,0.46) 0%, rgba(10,10,12,0.15) 26%, rgba(10,10,12,0.92) 100%);
+}
+.deck-stack-topline {
+  z-index: 2;
+}
+.deck-stack-count {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.22);
+  color: var(--color-gold);
+  font-size: 9px;
+}
+.deck-stack-bottom {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 2;
+}
+.deck-stack-mood {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  color: rgba(240,238,233,0.7);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.deck-stack-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: var(--weight-bold);
+  line-height: 1.05;
+}
+.deck-info .name {
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+.deck-info .meta {
+  line-height: 1.4;
+}
+.deck-mini-fans {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+.deck-mini-fans img {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1.5px solid var(--color-bg);
+  margin-left: -6px;
+}
+.deck-mini-fans img:first-child { margin-left: 0; }
+
+.profile-header {
+  position: relative;
+  overflow: hidden;
+}
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: 15%;
+  right: 15%;
+  height: 220px;
+  background: radial-gradient(circle, rgba(201,168,76,0.14) 0%, transparent 72%);
+  pointer-events: none;
+}
+.collector-dossier {
+  background: linear-gradient(180deg, rgba(26,26,30,0.96) 0%, rgba(20,20,24,0.98) 100%);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: var(--space-6);
+}
+.collector-dossier-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: 8px;
+}
+.collector-dossier-copy {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.collector-dossier-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.collector-dossier-stat {
+  border: 1px solid rgba(240,238,233,0.06);
+  border-radius: 14px;
+  background: rgba(240,238,233,0.02);
+  padding: 12px;
+}
+.collector-dossier-stat strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.collector-dossier-stat span {
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.collector-insight-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: var(--space-6);
+}
+.collector-insight-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(232,224,208,0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color var(--dur-micro) var(--ease-micro), transform var(--dur-small) var(--ease-spring);
+}
+.collector-insight-card:active {
+  transform: scale(0.98);
+}
+.collector-insight-card:hover {
+  border-color: rgba(201,168,76,0.18);
+}
+.collector-insight-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-gold);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.collector-insight-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.collector-insight-caption {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.card-detail-overlay {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.card-detail-ambient,
+.card-detail-scrim {
+  position: absolute;
+  inset: 0;
+}
+.card-detail-ambient {
+  background: radial-gradient(circle at top, rgba(201,168,76,0.18) 0%, transparent 42%), linear-gradient(180deg, rgba(26,26,30,0.92) 0%, rgba(14,14,16,0.98) 100%);
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.14);
+  filter: saturate(1.08);
+}
+.card-detail-scrim {
+  background: linear-gradient(180deg, rgba(14,14,16,0.38) 0%, rgba(14,14,16,0.68) 42%, rgba(14,14,16,0.92) 100%);
+}
+.card-detail-stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.card-detail-meta-rail {
+  width: min(88vw, 360px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.card-detail-flip-hint {
+  align-self: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(201,168,76,0.18);
+  background: rgba(20,20,24,0.88);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.card-detail-context-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.detail-context-chip {
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(240,238,233,0.08);
+  background: rgba(20,20,24,0.84);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.card-detail-container {
+  width: clamp(304px, 84vw, 360px);
+  aspect-ratio: 5 / 7;
+  max-height: min(82vh, 620px);
+}
+.card-detail-face {
+  border: 1px solid rgba(201,168,76,0.16);
+}
+.card-detail-front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg, transparent 28%, rgba(255,255,255,0.08) 49%, transparent 72%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 1;
+}
+.card-detail-front-top {
+  position: absolute;
+  top: var(--card-shell-top-inset);
+  left: var(--card-shell-side-inset);
+  right: var(--card-shell-side-inset);
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-detail-front-meta {
+  padding: 18px var(--card-shell-side-inset) calc(76px + var(--card-shell-bottom-inset));
+  z-index: 4;
+}
+.card-detail-front-meta .title {
+  font-size: clamp(1.35rem, 5vw, 1.75rem);
+}
+.card-detail-front-meta .artist {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: 15px;
+  color: rgba(240,238,233,0.78);
+}
+.card-detail-front-meta .album-year {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  color: rgba(240,238,233,0.6);
+}
+.card-detail-front-meta .album-year span {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(20,20,24,0.24);
+  border: 1px solid rgba(240,238,233,0.08);
+  font-size: 10px;
+}
+.card-detail-front-pillrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.card-detail-front-pill {
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(16,16,20,0.44);
+  border: 1px solid rgba(240,238,233,0.12);
+  font-size: 10px;
+  color: rgba(240,238,233,0.78);
+}
+.card-detail-front-signal {
+  margin-top: 8px;
+  font-size: 11px;
+  color: rgba(240,238,233,0.7);
+}
+.card-detail-front-signal strong {
+  color: var(--color-gold);
+  font-weight: var(--weight-semi);
+}
+.card-detail-fav-btn,
+.card-detail-play-btn,
+.card-detail-close,
+.flip-back-btn {
+  background: rgba(16,16,20,0.62);
+  border: 1px solid rgba(240,238,233,0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.card-detail-back {
+  background: linear-gradient(180deg, rgba(24,24,28,0.98) 0%, rgba(18,18,22,1) 100%);
+}
+.card-detail-back.layout-memory-hero .card-back-story {
+  min-height: 150px;
+  font-size: var(--text-md);
+  color: var(--color-text-primary);
+}
+.card-detail-back.layout-stat-heavy .card-stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.card-detail-back.layout-era-focused .context-row {
+  justify-content: center;
+}
+.card-context-moments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.card-context-moment {
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(201,168,76,0.16);
+  background: rgba(201,168,76,0.08);
+  color: var(--color-gold);
+  font-size: 11px;
+  cursor: pointer;
+}
+.card-back-label {
+  letter-spacing: 0.12em;
+}
+.preview-bar {
+  background: rgba(20,20,24,0.94);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid rgba(201,168,76,0.1);
+}
+.preview-bar-add {
+  background: rgba(201,168,76,0.14);
+  color: var(--color-gold);
+  border: 1px solid rgba(201,168,76,0.22);
+}
+
 </style>
 </head>
 <body>
@@ -3425,6 +4220,10 @@ img { display: block; max-width: 100%; }
             </div>
           </div>
         </div>
+        <div class="collection-hero-copy">
+          <div class="collection-kicker">your vault</div>
+          <div class="collection-subtitle">the songs you claimed, kept, and still come back to.</div>
+        </div>
         <div class="collection-search-wrap">
           <svg class="collection-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input type="text" class="collection-search" id="collectionSearchInput" placeholder="Search your collection...">
@@ -3446,6 +4245,14 @@ img { display: block; max-width: 100%; }
           <button class="control-pill" id="filterPinned" onclick="toggleFilter('pinned')">📌 Pinned</button>
           <button class="control-pill" id="groupByBtn" onclick="openGroupPicker()">Group</button>
         </div>
+        <div class="collection-recent-section" id="collectionRecentSection" style="display:none;">
+          <div class="collection-section-head">
+            <span>recently collected</span>
+            <button class="collection-inline-action" onclick="setViewMode('grid')">view all</button>
+          </div>
+          <div class="collection-recent-strip" id="collectionRecentStrip"></div>
+        </div>
+        <div class="collection-mood-filters" id="collectionMoodFilters" style="display:none;"></div>
       </div>
       <div class="card-grid" id="cardGrid"></div>
       <div class="card-list" id="cardList" style="display:none;"></div>
@@ -3460,14 +4267,22 @@ img { display: block; max-width: 100%; }
     <!-- Search Tab -->
     <div id="tab-search" class="tab-content">
       <div class="search-header">
-        <span class="search-editorial-label">discover</span>
+        <span class="search-editorial-label">the hunt</span>
+        <div class="search-subtitle">find the song, then claim the card.</div>
       </div>
       <div class="search-input-wrap">
         <svg class="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search for a song..." oninput="toggleSearchClear()">
+        <input type="text" class="search-input" id="searchInput" placeholder="artist, song, era, mood..." oninput="toggleSearchClear()">
         <div class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </div>
+      </div>
+      <div class="search-browse" id="searchBrowse">
+        <div class="search-browse-card">
+          <div class="search-browse-label">browse</div>
+          <div class="search-browse-copy">start with a memory, an artist, or a feeling. every result should feel collectible before you save it.</div>
+        </div>
+        <div class="search-trending" id="searchTrending"></div>
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="search-empty" id="searchEmpty" style="display:none;">
@@ -3491,7 +4306,10 @@ img { display: block; max-width: 100%; }
     <!-- Decks Tab -->
     <div id="tab-decks" class="tab-content">
       <div class="decks-header">
-        <h2>Decks</h2>
+        <div>
+          <div class="decks-kicker">curated stacks</div>
+          <h2>your decks</h2>
+        </div>
         <button class="create-deck-btn" onclick="createNewDeck()" title="Create Deck">+</button>
       </div>
       <div class="deck-list" id="deckList"></div>
@@ -3622,13 +4440,22 @@ img { display: block; max-width: 100%; }
 
 <!-- Card Detail Overlay -->
 <div class="card-detail-overlay" id="cardDetailOverlay" onclick="closeCardDetailOnBg(event)">
+  <div class="card-detail-ambient" id="cardDetailAmbient"></div>
+  <div class="card-detail-scrim"></div>
+  <div class="card-detail-position" id="cardDetailPosition" style="display:none;"></div>
   <button class="card-detail-close" onclick="closeCardDetail()">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
   </button>
-  <div class="card-detail-container" id="cardDetailContainer" onclick="flipCardDetail(event)">
-    <div class="card-detail-inner" id="cardDetailInner">
-      <div class="card-detail-face card-detail-front" id="detailFront"></div>
-      <div class="card-detail-face card-detail-back" id="detailBack"></div>
+  <div class="card-detail-stage">
+    <div class="card-detail-container" id="cardDetailContainer" onclick="flipCardDetail(event)">
+      <div class="card-detail-inner" id="cardDetailInner">
+        <div class="card-detail-face card-detail-front" id="detailFront"></div>
+        <div class="card-detail-face card-detail-back" id="detailBack"></div>
+      </div>
+    </div>
+    <div class="card-detail-meta-rail">
+      <button class="card-detail-flip-hint" id="cardDetailFlipHint" onclick="toggleDetailFace(event)">tap to flip</button>
+      <div class="card-detail-context-chips" id="cardDetailContextChips"></div>
     </div>
   </div>
 </div>
@@ -3787,11 +4614,12 @@ async function confirmCreateDeck() {
   const name = document.getElementById('deckNameInput').value.trim();
   if (!name) return;
   const desc = document.getElementById('deckDescInput').value.trim();
+  const addedCardId = _deckModalCardId;
   haptic('success');
   document.getElementById('createDeckModalOverlay').classList.remove('show');
 
   const deckId = uuid();
-  const cardIds = _deckModalCardId ? [_deckModalCardId] : [];
+  const cardIds = addedCardId ? [addedCardId] : [];
   const deck = {
     id: deckId,
     name,
@@ -3807,11 +4635,12 @@ async function confirmCreateDeck() {
   };
   await dbPut('decks', deck);
   logEvent('deck_created', { deckId, isSmart: false });
-  if (_deckModalCardId) {
-    logEvent('deck_card_added', { deckId, cardId: _deckModalCardId });
+  if (addedCardId) {
+    logEvent('deck_card_added', { deckId, cardId: addedCardId });
     haptic('medium');
   }
   await refreshData();
+  await refreshOpenDetailCard(addedCardId, { cardList: getDeckCardIds(allDecks.find(d => d.id === deckId)) });
 
   if (_deckModalResolve) {
     _deckModalResolve({ deckId, name, desc });
@@ -3826,7 +4655,7 @@ async function confirmCreateDeck() {
 // ── CONSTANTS ──
 const HEARD_SYMBOL_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhEAAAK8CAYAAABRHO0iAAABgmlDQ1BzUkdCIElFQzYxOTY2LTIuMQAAKJF1kc8rRFEUxz8zgxEGxcLCYtKwMTRGTWwsRgyFxRjl12bmzS81P17vzSTZKtspSmz8WvAXsFXWShEpWcuS2KDnvBk1k8y5nXs+93vvOd17LlhDKSWt13ggnclpwYDfOb+w6LS/YKMZB3X0hhVdnZ4dD1HVPu6wmPGmz6xV/dy/1hiN6QpY6oVHFFXLCU8IT63mVJO3hduVZDgqfCrs1uSCwremHinxs8mJEn+ZrIWCo2BtFXYmKjhSwUpSSwvLy3GlU3nl9z7mS5pimblZiV3inegECeDHySRjjOJjgGGZffThpV9WVMn3FPNnyEquIrPKGhorJEiSwy1qXqrHJMZFj8lIsWb2/29f9figt1S9yQ+1T4bx1g32LfguGMbnoWF8H4HtES4y5fzsAQy9i14oa659aNmAs8uyFtmB803oeFDDWrgo2cSt8Ti8noBjAdquoWGp1LPffY7vIbQuX3UFu3vQI+dbln8ASpJn2RhHK7gAAAAJcEhZcwAALiMAAC4jAXilP3YAACAASURBVHic7d131KxpVeDtfbAn6AxNZsBvL8eMSs4ZQRgZBcmYUDERREWQjOSmGzrRGToQGpqcozKjCOqYs2MY9UOdzz2DZGgyouf7o++3efv0CW/db1Xdz1N1XWuxFvQ5p559uulTv9r3U1UHYgNU1f+NiOuPngMA9uADmfnVo4dYhgOjB+hRVf8UEf9p9BwAsCQfzMzrjR5iUbOIiKr6UERcZ/QcALAmH87M644e4lgmGxFV9eGIuPboOQBgsI9k5iRfSE8uIqrqIxFxrdFzAMDEfDQzJ/XiejIRUVUfjYhrjp4DACbuY5k5iRfbwyOiqj4WEdcYPQcAzMzHM3Poi+9hEVFVH4+Iq4+6PgBsiE9k5pAX40Mioqo+ERFXG3FtANhQn8zMtb44X2tEVNUnI+L4dV4TALbIpZm5thfpa4sIAQEAa/OpzFz5c+7KI6KqLo2Iq676OgDAFaw8JFYaEVX1qYj4j6u8BgBwRJ/OzJW9kF9ZRAgIAJiMz2Tm0p+TVxIRVfXpiPgPq3hsAKDL0kNiqRFRVZ+JiK9a5mMCAEvz2cxc2ov8qyzrgQCAyfuq9oJ/KZayiaiqz0bEVy7jsQCAlftcZu775MAmAgC2z1e2BcC+7HsTYQsBALP1+czsfg7fV0RU1eci4t/v5zEAgKG6Q6L7OENAAMB269pECAgA2Chd24iFI6KqPh8R/27RXwcATNoXMnOhBcFCESEgAGCjLRQS3uIJAHTZ8yaiqr4QEf92hbMAAON9MTP3dOqwp4gQEACwVfYUEo4zAIAux9xEVNUXI+LfrGGWZbl+Zv7T6CEAYLequl5EfGD0HAv458w86inEceuaZMWul5kfHD0EABxJe4F7+Yv3qrpuRMz6ueuom4iJbyGum5kfHj0EAOxHVV0nIj40eo4jOOo2Yo4RcZ3M/MjoIQBgmarq2hExxRfHX8rMw7bAEW+srKp/DgEBAGuRmR/JzAMRce3Rs+zVXN6dce3MPCAgANh0mfnRmElIHPY4o20hpnLT5bXb31AA2BpVda2ImMqL58MeaUx9E3EtAQHANmrPf9caPcfRTDkirpWZHxs9BACM0p4HpxASx1XVlw79i1eKiPaTRh9lXFNAAMDlIXHN0XMczhQ3EdfMzI+PHgIApqI9L04uJKYYEQDAIVpIXGPgCF9x6JHGFY4t2g9+xVpHuqJrZOYnBl4fANijKW0iBAQAHEV7nhy5jbiCyzcRVfUvMa2oAAAmbCrRcHVbCAA4tvZ8efVBl/+KtnSIiOlEBAAwM1OIiKtn5idHDwEAc9GeN0dtIy43hYgAAGboKhFDb6q8mi0EACyuPX9ebeQMNhEAwCKusnNzpYgAALqMjIirZealA68PAOyDTQQAzFR7MT7svggRAQB0EREAQBcRAQAs6ipVdfC4qjo44OLHZ+anBlwXAFgSmwgAoIuIAAC6iAgAmLH2Ns/jR1xbRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANBFRAAAXUQEANDluNEDwLJV1asj4gcO80M/mJmvWfc8AJtKRDA7VfX6iHhwxy99dQuMQ/1wZr5yn2MBbB0RwSxU1Rsj4oErevhLquqSXf/7oZn5ihVdC2BjuCeCyaqqN1XVwao6GKsLiMN5ebvuQ9d4TYDZERFMUlW9OSIeMHiMi3cipqp+bPAsAJMjIpiMqnrLrs3D/UfPc4iXttl+fPQgAFMhIpiEqnprRNxv9Bx78BIhAXAZEcFQVfW2tnm47+hZFvCStpX4idGDAIwkIhimqt4WEfcZPcc+vLiqfnL0EACjiAjWrqre3rYPcw6IHRe1rYSYALaOiGCtquodEfE9o+dYgYuq6mGjhwBYJxHB2rSAuPfoOVboQiEBbBOfWMnKVdU7I+Jeo+dYkwur6kBmXjh6EIBVs4lgpbYsIHZcUFUPHz0EwKqJCFamqt4V2xcQOy5oN1w+YvQgAKsiIliJFhDfPXoOAFZHRLB0VfWLISB2nF9Vjxw9BMAqiAiWqgXEd42eY2JeJCSATSQiWJqq+qUQEEfyoqr6qdFDACyTiID1eaGQADaJiGAp2hbiv46eYwZeWFWPGj0EwDKICPatqt4dAmIR5wkJYBOICPalBcQ9R88BwPqJCLpV1X8LAdHrvKr66dFDAOyHiIBxzhUSwJyJCLq0LcR3jp4DgHFEBAurqv8eAmJZzq2qnxk9BEAPEcFCWkD8l9FzbJhzhAQwRyICAOhy3OgBmI+q+uWIuMfoOY7h+zLz9Yf7gap6ZUQ8ZM3z7NU5VXUgM88ZPQjAXtlEsCczCIjvzcwDRwqIiIjM/KH2cw5ExCVrnG2vzq6qnx09BMBe2UQwdw/OzDcu+osy80eqKiLih5c/EsB2sIngmKrqV2J6W4gHta3CwgGxIzN/pG0lXrHEufbr7Kp69OghAPZCRHBULSDuPnqOQzwoM9+0rAfLzIdGxMuX9XgA20JEMCcPbNuHpQXEjsz80ZhOSJxlGwHMgYjgiKrqPTGdLcQDMvPNq7xAC4mLV3kNgE0iIpiDB2TmW9Zxocz8sXafxMvWcb2jOKuqfm7wDABHJSI4rLaF+I7Rc0TE/dcVEBN0ppAApkxEMGX3z8y3jrhwZv54jN9GAEyaiOBKqupXYxpbiKFaSLx08BhnVtVjBs8AcFgigitoAXG30XNExP1GbSF2y8yfiPEhATBJIoIpul9mvm30EAAcnYjgclX13hi/hbjv1AKibSNeMnCEMxxpAFMkImAPMvMnY2xIAEyOiCAiLt9C3HXwGPfNzLcPnmGqzqiqx44eAmA3EcFU3GfqAdG2ES8ePQfAVIgIoqreF+O3EBzbC2wjgCkREUzBfTLzHaOH2IvMfFjYRgBERMRxowdgrLaF+PaBI3xPZr5z4PUB6GQTAQtq24iLBl3ekQYwGTYRW6yqfi0i7jJwBFsIgBmziYAOmfnwGLuN+PlB1wa4nE3ElprAFuLemfmugdcHYJ9sIqBT20ZcOHoOgFFEBCPYQuzf6Y40gNFExBYafJRxr00KiMx8RNhGAFtKRMB8nV5Vjxs9BLC9RMSWqapfj7FbiF8cdO2VsY0AtpWIAAC6iIgt0rYQdx50+e/exC3EBJzmSAMYRUTAErQjjQtGzwGwTj5saktU1W9ExJ1GzwHA5rCJYB2+OzN/afQQq5aZj4wx24jTqurxA64LbDkRAQB0ERFbYPBRxlZsISbgVNsIYN1EBCxRO9I4f/QcAOvgxkpW6bsy892jhwBgNWwiNlxV/Y/wroy1ysyfijHbiFOr6gkDrgtsKRHBqthCAGw4EbHB2hbijqPnAGAziQhYgXak8aIBlz7FkQawLm6sZBX+a2b+t9FDALBaImJDVdVvRsQdRs8BwOZynMGy2UI0mfmoGHek8cQB1wW2jIjYQLYQAKyDiIAVatuIF46eA2AVRATLdE9HGZNxsiMNYNXcWLlhquq3IuL2o+cAYPPZRLAs98zM/z56iCnKzJ+OMUcaJ1fVkwZcF9gSIgIA6CIiNoijDADWyT0RLMN3ZuYvjx4CgPWyidgQVfXbYQsxWe2+iPMGXPr57osAVkVEAABdRAT75SgDYEuJiA3QjjJuN3oOji4zfybGHWk8ecB1gQ3nxkr2479k5q+MHgKAMWwiAIAuImLmqup3wlHGbLQjjXNHzwGwDCKCXo4y5uV57osAlk1EzFjbQtx29BwAbCcRQY972EL0y8yfDUcawAYQEbA9nldVTxk9BLA5vMVzpqrqdyPiNqPnAGB72UTAAO1I45zRcwDsh4iYocFbiHtk5nsGXZv9O8mRBrAsIgIA6CIiYJDMfHQ40gBmTETMTFX9Xow7yri7o4yNcFJVPXX0EMD8eXcG+1ZV746Iex7mh74rM9+97nkAWA8RwSLeU1WL/PxfOsLPv3dmvms5I81bZj66qg5GxKNHzwKwKBExI+0o49aj51iCdx4SF/fJzHeMGmZLnVhVkZknjR4EmC8RwRS8fVdU3Dcz3z5yGAD2xo2VTM3bqupgVd139CDrkpk/FxFnj54DYFEiYiaq6vdjM44y9uqtLSbuN3qQDXZiVf3C6CGA+RIRTN1bWkzcf/QgAFyRiJiBtoW41eg5BntzVT1g9BAAfJmIYE7e1LYSDxw9yLK1+yLOGj0HwCJEBHP0xk0MiUGe674IoJeImLiq+oNwlHE4b2xbiQeNHgRgW4kI5u4NVfXg0UMsQ2Y+JhxpADMiIiasbSFuOXqOGXj9poTEIM+tqqeNHgKYHxHBpnh9VX3v6CEAtomIYJO8bu4h0Y40zhw9B8BeiIiJqqo/DEcZPV5XVd83eogZOsGRBrAoEcEmeq2QAFg9ETFBbQtxi9FzzNxsQyIzHxuONIAZEBHAjhOq6umjh2B1quqe7fNVDlbVu0fPw/wdN3oAWKHXVtWBzHzt6EFg1arqXhHxzgV+yT2r6uAxfs57MvMe+xiLDSciJqaq/igibj56jg3ymqoKIcEmqqp7R8Q7VniJu+8Kjfdm5nes8FrMkIhgG7ymbSReM3qQvcrMx7Y/vB87ehamparuExFvG3Dpu+0Kivdl5t0GzMDEiAhgt+e0zc0Jowfhy6rqvhHx1tFz7HLXFhS/lpl3HT0M47ixckIcZazUq6vqB0YPAYuoqvu1J+spBcRu395u0vy10YMwhohgm7y6qn5w9BB7lZk/HxFnDLj0c6rqGQOuS1NV92/x8JbRs+zRXVpM/ProQVgvETERVfXHYQsBW6+qHhARbx49R6c7t5j4jdGDsB4igm3zqjltI9geVfXAtn140+hZluBOLSb+x+hBWC0RMQFtC3Gz0XNskVdV1UNGD7EX7UjjBQMu/WxHGutRVQ9q8fDG0bOswB2FxGYTEQCDVNWDIuINo+dYsTtW1W+OHoLV8BbPwTZgC/GdmfnLh/uBqnpXRHz3mufZq1e2tzK+avQgbKeqenBEvH70HGtyh7Zt+e3MvMPoYVgemwh63CMzD7T/HDYgIiIy8147Py8i3rXG+ViOZ1fVM0cPsYm2LCB2u31V/dboIVgeETFQVf1JzGcLcfdd4fCeRX9xZt67xcQin+2/aq+sqh8aPcSxZObjYsx9EaxAVX1vbGdA7Lh9Vf326CFYDhHBXnxHZv7qMh4oM78nVvtZ/4u6ZA4hwfxV1fe1lf7rRs8yAbcTEptBRAzSthA3HT3HMdytbR7eu8wHzcz7tK3E25f5uKzEsxxpsCK3q6rfGT0E+yMiOJK7Zeb7VnmBzLxvTCMkLqmqHx49xNG0I43TR8/B4nZtIHyT7JXdVkjMm4gYoKr+NKa9hbjrqgNiRwuJEd9ICEzDbdsHU/3u6EFYnIjgUHfNzLV+mU5m3i/Gh8Qrpr6NGMiRRqeq+v6wgdir21TV740egsWIiDVrW4ibjJ7jML693f8w5Nv4WkhM9ZsKJyEzHx+ONGajBcRrRs8xM7cWEvMiIoiIuEtm+va9y7YRPzJ6iIl6VlU9a/QQc9G+dl5A9Ll1Vf3+6CHYGxGxRlX1ZzG9LcRdMnMS37iXmfcP24ijso2YvhYQrx49x8zdSkjMg4jYbneeSkDsaCHxloEjvNw2gl7tG2IFBFtDRKxJ20LcePQcu9w5M327Hot4piMN1uhWVfUHo4fg6EQEk5OZD4ix24hJa0cap42egytqWwhf6LZctxQS0yYi1qCq/mfYQiykhcSbB13+5VX10EHXnrpnVtWzRw8xNVX1kBAQq3LLqvrD0UNweCJi+9xp6gEBcIhbCIlpEhEr1rYQNxo9R3OnzPzN0UPsVWY+MMZtIy6e8jYiM58QjjQmoW0hXjl6ji1wi6r6o9FDcEUiAljUMxxpXKZ9A6yAWJ+bC4lpOW70AJusqv48Im44eo7mjpn5W6OHWFRmPrCq3hgRDxw9C+zWAuKS0XPswS9m5r2O9hOq6h4R8ctrmme/bl5Vf5SZtxg9CDYRKyMgNsLFVfWjo4c4knakceqgyz+jqp4z6Noc27vax9gfOFZARERk5q/s/PyIuPsa5tuvm1fVH48eAhGxDe4w94DIzAdFxJtGzwE72pe1TXEL8c4WA/fufYDM/NUWE9+xxLlW4WZCYjzHGStQVX8REd82eg5g+VpAvGL0HId4R2beZ5kPmJnvjYgDVXXXiHjvMh+bzWETsdnukJm/PXqImXvZxI80nhjjjjSe7khjEt6+7IDYLTPfFxF3W9Xj79PNqupPRg+xzUTEkk1oC3H7TQqIdqTxxtFzcCVPr6oTRg+xLu17Vaa0hXh7Zt531RfJzPe1I467rvpaHW4qJMYREUtUVX8Z0wgIlutlVfVjo4c4kraNOGX0HJuuBcTLR8+xy9vWERC7ZeavRcS3r/Oae3TTqvrT0UNsIxGxmW6fmb8zeohly8wHh20ERFwWEPcbceHM/PWYZkjcREisn4hYkraF+NbRc0TE7TYxIDi6zHxSjNtGPG3TjzTap5dOZQvx1lEBsaOFxF1GznAEN2nfmMyaiIglqKq/imkEBKvz0ikfaUzA06rquaOHWIUWEBePnqN5a2bef/QQERGZ+RsxzZC4sZBYHxGxTy0gvmX0HM3tMvN3Rw+xSu1I4w2j54AB3jKVgNjRQuLOo+dgHBGxD1X1v2I6AXHbTQ8Ijq4daZw8cIRf2LRtRHt778WDx4i4LCAeMHqIw2nfCjy1kLhx+/JDVkxEwN69tKp+fPQQrEcLiJeNnmMOJhoSNxISqyciOrUtxA1Gz9HcNjN/b/QQ65KZ3xuONA4rM58c47cRJw68/iZ681S3ELu1kLjT6DkOcaP2PUasiIjoUFV/HdMJiNtsU0DAOrSbaKewhXhzZs7mG2wz8zdjeiFxQyGxOiJiQS0gvnn0HHAkbRvx/IEjPHXO24gWEC8dPcdctZC44+g5DnHD9mnCLJmIWEBV/U1MKyBuk5m/P3qIEdqRxusHXPol7ovYk6dW1Umjh5i5N81pCzED3yYklk9E7FELiG8aPccut97WgODYMvMpMXYbMUstEG0h9ikzfyumt42IuCwk/nL0EJtEROxBVf1tTCsgYA6eMqdtRAuIl4yeo3lT+9K52WohcYfRcxzGtwqJ5RERx9AC4htHz3GIW2fmH4weYrTM/L4Yd6TxEwOuu5C2jXje4DGeUlWjZzim9s9zKgHxxrkHxI72TcJTDYm/Gj3EJhARR1FV/29MLyBuJSCYmSdPOSRaQLx49BybqoXE7UfPcRjfUlUH29v16SQiDqOq3l9VByPiG0bPAvuRmU+N8duIiMtCYnL3aFTVT8a0AuKN7aPdN0r7UsAphkRExA2ERD8RcYiqen9EfP3oOY7gVpn5h6OHmJJ2pPG60XMwPy0gLho9B5Nwg7aV+OvRg8yNiNhl4gFxSwExKS+ew30REZdvI6Zwg+OTprKNmGhAvGETtxA72jbidqPnOIZvbu/EY49ERERU1d+144spB8QfjR4CluBJVTXyY7mjqh4W0wuIrdC+JHDqIfFNbSvxt6MHmYOtjoiq+vsWD183ehZYpcz8hZjGNiIi4ontD+lT1n3hFhAXrvu6e/CG9gFqG6+FxG1Hz7EH39j+f3qw3WTPYWxlRFTVP7R4+NrRs+zBLWwhji4zvz/G3Bfx4rYWp88T1hUSVfXw9u/8FANi67Tv+5lDSOz4hhYT7x89yNRsVURU1f9uf5D859Gz7NEtMvOPRw/BZmjbiKl9p8UTqurUVT14VT2i/Tt/waqusQSv35YtxG4tJG4zeo4Fff2u7cTfjR5mCjY+IqrqH3f+oUfE14yeZwE3FxAsW2Y+LaYXEo9v/46etqwHrKpHtn/nz1/WY7J87aP75xYSO75uV1AcrKp/GD3QCMeNHmDZqur/RMRXj55jn26emX8yeghYs8dV1eMi4vTMfPyiv7iqHhUR5y1/rJV6fXubMvP3n1u47vjHzJzTC9cuBw75Ta/L8Zn5qUV+QVV9KCKus6J5pkZEdKiq10TE9w+49MMyc0ofWHRMVXVCRDxt9BwLODMi/j4izho9yJKJiIioqltFxDZ9oeAHMnOpL3ar6qoRcekyH3MvRm0iLq2qQZeevJtl5p+OHoLNlplPb/8OziUkHjN6gBV4XbspeOtl5h9U1a1je0Li+oNewC/dxt8TMTMCYh8y8wci4rWj5wAW174T6Faj52AxImI6biogWKfMfHpEnDB6DtjRPpVXSMyIiJiGm2bmn40egm4XzfXzIjLzGSEkRnCUcQQtJG45eg72RkSMJyAAdmkfsCckZkBEjHUTAbFc7b6I14yeY07aNuI5o+fYIq+1hTi2FhK3GD0HRycixrlJZv7P0UNARERmPjOEBBPTPnBPSEyYiBjjxgJi41zUvtxptlpIPHv0HLBbZv5xZh6IiJuPnoUrExHrd+PM/PPRQ8DhZOazQkis0mvbkRsLah/Ad7PRc3BFImK9biQgVi8zfzDcFwEbp70NXkhMiIhYnxtl5l+MHgKOpW0jnjV4DDgsITEtImI9biggtsKFc78vYkdmPjuExLK9xlHGcrSQuOnoORAR63DDzPzL0UPAooQEU9beHi8kBhMRq/NtmXlAQIzhvojlaCHxzNFzwOFk5p+1d27cZPQs20pErMa3ZuZfjR4CliEznxNCYr9e08KWFWhvmb/x6Dm2kYhYrm9p24f/NXoQhrmwqh4+eohlayHxjNFzwJFk5p+3rcSNRs+yTUTE8nxLZv716CFgVTLzhBASTFy7iV1IrImI2L8btO2DgJiYtj5+9eg5NklmntBe7T199Cwz4ihjzTLzL9r/T284epZNJyL255sz829GDwHrlpnPjYinjZ4DjiYz/7LFxLeNnmVTiYg+39S2D387ehAYJTNPDCHBDGTmX7WY+NbRs2yaA1V1cPQQM/KNmfn+0UOwmKp6VUSse538iMy8cM3XHKaqnhoRJ46eY4JenZkPGT0EV1RVN4gIN8AvgU3E3nxD2zwICDiMzDwpIp46eg7Yi8z867aZuMHoWeZORBzZ17dwOJCZfzd6GJi6zHxe+4P5KaNngb3IzL9p/5/95tGzzJWIuLKva+Hw96MHYdYuqKpHjB5ihMx8fvuD+cmjZxnMUcZMZObf7rxojIhvHD3PnIiIy3ztrq3DP4weBjZBZp7c/lB+0uhZYK8y8/27guIbRs8zdceNHmCQr8nMfxw9BOuRmQ9pNxB7VThAZp4SEadERFTVE3b+O0xdO8o+sPO/q+prI8KWepdtiojMzP8zegjYZpl5akScGhFRVY+LiNPGTrQyr8rMHxo9BMvVNtW7o+JrIuJ/DxtoAjYxIq6fmf80egiIiPOrKjLzgtGDTFFmnh4Rp+/+a1X12Ih4wZiJYDGZ+f/FrqjYUVX/T0TU+idav1ERcXxmfqqqPh4RV9/116+RmZ8YNBMwWGaeERFnLOvx2s2t5y/r8WAv2tb7SnFxOFV13Yj44GonWp2hm4jMvMbI67M9MvOHqirCfRGsnqMM9iwzPxR7DI6jqaqrRsSl+59oMd6dAWykqnpk2ELASokIAKCLiIDVOr+9IgZYiao6PgYcZUSICLZIO6d+5eg5WL0Wbi8acOlXuh+CbSIiAIAuIgIA6CIigI1SVT8V444yfnjAdWEYEQGr9yI3VwKbSESwVdorRTdXAiyBiAAAuogIYGO0+yFeOODSl7gfglEy89KIOH7EtUUErMeL2hMcwMYQEWyd9orxktFzACyDT6wEmK9LMvNHRg/B9nKcAbBPVfWoGHM/BGwtEQHr80L3RQCbREQAAF1EBFupnWG7uZL9eoX7IdhmIgKYvXY/xHmj54BtIyIAgC4igq3V1tCvWPNlX9heNTN/r8jMh44eAkYSEcCsVdVPh6MMGEJEAABdRAQA0EVEwPqd576I2Xu5+yFARLDl2hPBum+uZEna/RDnjp4DtpWIAAC6iAiAxbw8M3909BAwBSICxjivreIBZktEsPXafREvHz0Hi6mqnwn3Q8BQIgIA6CIiAPbuYvdDwJeJCBjnXPdF9GlHGeeMngO2nYiAiGivLt0XAbAAEQEAdBERAHtzcWb+2OghYEpEBDArVfWz4X4ImAQRAU27L+LiNV/23HaTIMDsiAiAY3uZowy4MhEBzEY7yjh79BzAZUQEjHeOIw1gjkQEANBFRMAu7dz74tFzcGVV9egYc5Txssz88QHXhckTEQBAFxEB03BOu2kQYDZEBADQRUTAIdp9ES8bPQdf1u6HOGvApV/qfgg4MhEBAHQRETAdZ7svYlJempk/MXoImDIRAUxaVf1cjDnKAI5BRMBhtHNw90UAHIWIAAC6iAiAK3uJ+yHg2EQETMvZ7e2MxOX3Q5w5wfaMHgAAC7VJREFUeg7g8EQEHEG7L+Klo+cAmCoRAXBFL8nMnxw9BMyBiIDpOcuRBjAHIgKYpKp6TLgfAiZNRMBRtDv03RexPV7sKAP2TkTANJ3V3pmwldoW4ozRcwBHJyIAgC4iAgDoIiLgGNp9ES8ZPQcr9+LMfNjoIWBORARM15nbeF9EVT023A8BsyAiAIAuIgIg4iJHGbA4EQF70D47wH0RK9aOMl4weg5gb0QETNuZ7TMTACZHRADb7qLMfPjoIWCORAQwCY4yYH5EBOxRuy/ixQMufYYjDWCKRASwzS50lAH9RAQwXFX9fDjKgNkREbCA9lkCo440HjvgugBHJCKAbXVhZj5i9BAwZyICGKodZZw+eg5gcSIC5uMFjjSAKRERsKB2X8RFo+dgXxxlwBKICGCYqnpcOMqA2RIRMC+ONIDJEBHAEG0LcdroOYB+IgI6tE85dF/EPF3gfghYDhEBAHQRETA/L2ifrTBbVfX4cJQBsycioFM70rhw9Bws5ILMfOToIWBTiAiYp9Pnuo1oW4hTR88B7J+IALbF+bYQsFwiAvah3eXvSAPYSiIC5uv09lkLs1FVTwhHGbAxRASwFi0gThl0+fMz86cGXRs2loiAfXKkAWwrEQHzdtrcjjSAzSEiYAnaNuKC0XNMVVU9McYdZbzIUQashoiA+TutffYCwFqJCGCl2hbi5NFzAMsnImBJ2gcZjTrSONU24rBelJmPGj0EbCoRAaxMVT0pbCFgY4kIYFO90BYCVktEwBK1I43zB13+1PaBTpPQthDPHz0HsDoiAthEL8zMnx49BGw6EQFL1j6TYNQ24pQpbCOq6slhCwEbT0TA5jmlva1yW51nCwHrISKApWpbiOeNngNYPREBK9CONF40cISTR2wjquopISBga4gIYJOcl5k/M3oI2BYiAlakfUbB6G3Ek9Z1sbaFOGld1wPGExHApjjXFgLWS0TACrVtxAsHjvD8dWwjquqpYQsBW0dEwOZ7fnvHxEq0gDhxVY+/R+dm5s8OngG2joiAFWufWTByGxER8bxVhERV/UKMDwhgEBEB2+N57ebHpWgB8dxlPd4+nGMLAWOICFiDto04b/QcEXHSMkKiqp4W0wgIYCARAdvnpHYfQ5cWECcscZ79OCczHz16CNhWIgLWpL39cArbiIiIExcNiap6elUdjOkExNkCAsYSEbC9Tqyqg+0/TzvST6qqZ7R4eM4aZwNm4ED7w2Hdjs/MTw24LgxXVedEhA9F2p+zM/PnRg8BU1FVV42IS9d9XZsIAKCLiIA1a29HPHf0HDN2li0ETIOIgAFaSJwzeo4ZOiszHzN6COAyIgIA6CIiYJD29kTbiL070xYCpkVEwEAtJM4ePccMnJmZjx09BHBFIgIA6CIiYLD2TgPbiCM7wxYCpklEwAS0kDhr9BwTdEZm/vzoIYDDExEwEe2mQSHxZS8QEDBtIgIA6CIiYELaNuLM0XNMwAsy83GjhwCOTkTAxLSbCLc5JE4XEDAPIgImqIXEGaPnGOD0zHz86CGAvRERMFHtpsJtCgkBATMjImDCWki8YPQca3CagID5EREwce3+gE0OidMy8wmjhwAWJyJgBlpInD56jhU4VUDAfIkImIm27t+kkDg1M584egign4iAGcnMx2fmgYg4bfQs+3BKZh4QEDB/IgJmqB0BzDEkTs7MJ40eAlgOEQEz1ULi1NFzLODkzHzy6CGA5RERMGOZ+cR2vHHK6FmO4vnt+EJAwIYREbABMvNJLSZOHj3LLs9r8fCU0YMAqyEiYIO0V/tTCImTMvOpo4cAVutAVR0ccN3jM/NTA64LW6WqToqIdW0CTszMp63pWsAuVXXViLh03dcVEbAlqurEiFj2duCEzHzGkh8TWJCIANauqp4TEU9f4Jc8OzOftaJxgE4iAgDoMioi3FgJAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHQREQBAFxEBAHS5SmYeiIh/HT0IADAvNhEAQBcRAQB0EREAMGNVdXxEXDri2qMi4tL2mwYAZsomAgDoIiIAgEX9a2YeEBEAQBcRAQB0GRkRn3RzJQD0a8+jnxx1fZsIAKDLVSIiMvMrwkdfAwALGL2J+GRVXW3wDAAwO+35c8RRxr+25cPwiAAAZmoKEfEJ2wgA2Lv2vPmJ0XNMISIAgBm6PCLa+ca/DJrjE1V19UHXBgD25l927oeIsIkAgFlpL7qHH2VETCsiPm4bAQBH1p4nPz56jh1XiIjMPC7GHWlEXBYS1xh4fQCYpPb8OJmAiJjWJgIAOIwWEB8bPMa/tGXD5a4UEe0nfGltI13Zx2wjAGD6prqJ+FhVXXP0EAAwUlVds6oOxvgtxJcO3UJETDciIiI+WlUHq+paowcBgHVrz38fHT3H0Rw2IjLz38TYI43dPiIkANgm7XnvI6PnOJYpbyJ2ExIAbLyqunY7vphSQHypLReu5IgR0X7BP69spMV9pB1vXHv0IACwbO357cOj51jEgaP9YFV9MSIOWx8TcN3MnNXfbAA4VFVdJyI+NHqOI/jnzPy3R/rBo0ZExORDYsf1MvODo4cAgL2oqv8UEf80eo492IqI2HH9zJzDPxQAtkxVXS8iPjB6jgUcNSAi9hARERFV9YWIOOoDAQAb5ZgRMZd3ZwAA6/PFYwVExB43ERG2EQCwJb6Ymf9uLz9xz5uI9oBf6B4JANgojjMAgB1f2OsWImKB44wdVfX5iNjzBQCAWfhCZv77RX7BwpuIdoHPL/rrAIDJ+vyiARHReZyRmV8ZQgIAtpp7IgBgu32+LQcWtvA9EbtV1eciYuH1BwAwCd0BEbHPTUS78Of28xgAwBCf209AROxzE7Gjqj4bEfsaBABYm89l5lft90GWck9EG+Szy3gsAGClPruMgIhY0iZiR1V9JiKWMhgAsHSfzcz/sKwHW+q7M9pgn1nmYwIAS/GZZQZExJI3ETuq6tMRsdRBAYBun8nM/7jsB13J50S0QT+9iscGABby6VUERMSKNhG7VdWlEXHVVV8HALiCT2Xm8au8wMojIkJIAMCarTwgItYUETuq6pMRsfLfFABssUsz82rruNBaIyIioqo+ERFr+c0BwBb5ZGZefZ0XXHtE7Kiqj0fEWn+zALCBPpGZ1xhx4WERsaOqPhYRQ37zADBzwwIiYgIRsaOqPhoR1xw9BwDMwMczc/hz5mQiYkdVfSQirjV6DgCYmI9m5rVHD7Hb5CJit6r6cERM6m8YAKzZRzLzOqOHOJxJR8SOqvpQREzybyAArMCHM/O6o4c4lllExG5V9cGImPzfWABYwAcz83qjh1jU7CLiSKrq/0bE9UfPAQDH8IHM/OrRQyzD/w/5fUNOT8wURAAAAABJRU5ErkJggg==";
 const DB_NAME = 'heardDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const ITUNES_API = 'https://itunes.apple.com/search';
 const GENRE_PALETTES = {
   'Hip-Hop/Rap': { vibrant: '#D4A04C', darkVibrant: '#8B6914', lightVibrant: '#F0D090', muted: '#A08050', darkMuted: '#604020', lightMuted: '#E8D0A0' },
@@ -3866,7 +4695,7 @@ let _detailCardIndex = -1;
 let currentActionCard = null;
 let currentDeckView = null;
 let deckPickerCardId = null;
-let activeFilters = { favorites: false, pinned: false, tags: [] };
+let activeFilters = { favorites: false, pinned: false, tags: [], mood: null };
 let currentViewMode = 'grid'; // grid, list, gallery
 let currentGroupBy = 'none'; // none, artist, genre, decade, mood, season, year-added
 let collapsedGroups = new Set();
@@ -3917,8 +4746,8 @@ function openDB() {
           cards.createIndex('isPinned', 'isPinned', { unique: false });
           cards.createIndex('state', 'state', { unique: false });
         }
-        if (oldVersion < 2 && db.objectStoreNames.contains('cards')) {
-          // v1.8 migration: new fields get null defaults on existing cards via JS below
+        if (oldVersion < 3 && db.objectStoreNames.contains('cards')) {
+          // v1.9 migration: new collector presentation fields get defaults via JS below
           try {
             const tx = e.target.transaction;
             const store = tx.objectStore('cards');
@@ -3927,7 +4756,10 @@ function openDB() {
               if (cursor) {
                 const c = cursor.value;
                 let dirty = false;
-                const newFields = {mood:null,rating:null,memory:'',location:'',heardAt:null,season:null,era:null,energy:null,collectReason:null};
+                const newFields = {
+                  mood:null,rating:null,memory:'',location:'',heardAt:null,season:null,era:null,energy:null,collectReason:null,
+                  dominantHex:null,accentHex:null,textContrastHex:null,uiLayoutTemplate:null,contextMoments:[]
+                };
                 for (const [k,v] of Object.entries(newFields)) {
                   if (!(k in c)) { c[k] = v; dirty = true; }
                 }
@@ -4028,18 +4860,22 @@ function dbClear(store) {
 
 // ── EVENT LOGGING ──
 function logEvent(name, data = {}) {
-  if (!db) return;
   try {
-  const event = {
-    event: name,
-    data,
-    timestamp: new Date().toISOString(),
-    sessionId,
-    screen: currentTab,
-    synced: false
-  };
-  const tx = db.transaction('events', 'readwrite');
-  tx.objectStore('events').add(event);
+    const event = {
+      id: useMemory ? `mem-${++memEventId}` : undefined,
+      event: name,
+      data,
+      timestamp: new Date().toISOString(),
+      sessionId,
+      screen: currentTab,
+      synced: false
+    };
+    if (useMemory || !db) {
+      memStore.events[event.id] = event;
+      return;
+    }
+    const tx = db.transaction('events', 'readwrite');
+    tx.objectStore('events').add(event);
   } catch (e) { /* ignore logging errors */ }
 }
 
@@ -4183,11 +5019,190 @@ function deriveEra(year) {
 
 function deriveSeason(isoDate) {
   if (!isoDate) return null;
-  const m = new Date(isoDate).getMonth();
+  const parsed = new Date(isoDate);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const m = parsed.getMonth();
   if (m >= 2 && m <= 4) return 'Spring';
   if (m >= 5 && m <= 7) return 'Summer';
   if (m >= 8 && m <= 10) return 'Fall';
   return 'Winter';
+}
+
+const COLLECTOR_MILESTONES = [1, 10, 25, 50];
+const detailAmbientCache = new Map();
+
+function hexToRgb(hex) {
+  if (!hex || typeof hex !== 'string') return null;
+  const normalized = hex.replace('#', '');
+  if (normalized.length !== 6) return null;
+  const int = Number.parseInt(normalized, 16);
+  if (Number.isNaN(int)) return null;
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255
+  };
+}
+
+function rgba(hex, alpha = 1) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return `rgba(201,168,76,${alpha})`;
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${alpha})`;
+}
+
+function getContrastHex(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return '#F0EEE9';
+  const srgb = [rgb.r, rgb.g, rgb.b].map(v => {
+    const n = v / 255;
+    return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+  });
+  const luminance = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  return luminance > 0.42 ? '#0E0E10' : '#F0EEE9';
+}
+
+function getCardCatalogNumber(card, cards = allCards) {
+  if (!card) return '0001';
+  const sorted = [...cards].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  const idx = Math.max(0, sorted.findIndex(c => c.id === card.id));
+  return String(idx + 1).padStart(4, '0');
+}
+
+function buildContextMoments(card, cards = allCards, decks = allDecks) {
+  if (!card) return [];
+  const moments = [];
+  const otherCards = cards.filter(c => c.id !== card.id);
+  const sameArtist = otherCards.filter(c => (c.artist || '').toLowerCase() === (card.artist || '').toLowerCase());
+  const sameGenre = otherCards.filter(c => (c.genre || '').toLowerCase() === (card.genre || '').toLowerCase());
+  const deckCount = decks.filter(d => (d.cardIds || []).includes(card.id)).length;
+  const seasonAnchor = card.heardAt || card.createdAt;
+  const season = card.season || deriveSeason(seasonAnchor);
+
+  if (card.era) moments.push(`${card.era} artifact`);
+  if (card.genre) moments.push(`${card.genre} pull`);
+  if (sameArtist.length === 0 && card.artist) moments.push(`first ${card.artist} card`);
+  if (sameGenre.length === 0 && card.genre) moments.push(`first ${card.genre.toLowerCase()} claim`);
+  if (deckCount >= 2) moments.push(`appears in ${deckCount} decks`);
+  if ((card.previewPlayCount || 0) >= 3) moments.push('heavy rotation');
+  if ((card.viewCount || 0) >= 4) moments.push('revisited often');
+  if (season) moments.push(`collected in ${season.toLowerCase()}`);
+  if (card.collectReason) moments.push(card.collectReason.toLowerCase());
+  if ((card.tags || []).length > 0) moments.push(`${card.tags[0]} coded`);
+
+  return [...new Set(moments.filter(Boolean))].slice(0, 4);
+}
+
+function pickUILayoutTemplate(card) {
+  const memoryLen = (card.memory || '').trim().length;
+  const contextWeight = (card.contextMoments || []).length;
+  const statWeight = (card.previewPlayCount || 0) + (card.viewCount || 0) + (card.sharedCount || 0);
+  if (memoryLen > 160) return 'layout-memory-hero';
+  if (memoryLen > 40 && contextWeight >= 2) return 'layout-context-balanced';
+  if (!memoryLen && statWeight >= 8) return 'layout-stat-heavy';
+  return 'layout-era-focused';
+}
+
+function applyCollectorPresentation(card, cards = allCards, decks = allDecks) {
+  if (!card) return card;
+  const palette = card.palette || DEFAULT_PALETTE;
+  card.dominantHex = card.dominantHex || palette.dominant || palette.darkVibrant || palette.vibrant || '#1A1A1E';
+  card.accentHex = card.accentHex || palette.accent || palette.lightVibrant || palette.vibrant || '#C9A84C';
+  card.textContrastHex = card.textContrastHex || getContrastHex(card.dominantHex);
+  card.contextMoments = buildContextMoments(card, cards, decks);
+  card.uiLayoutTemplate = pickUILayoutTemplate(card);
+  return card;
+}
+
+function normalizeCardRecord(card, cards = allCards, decks = allDecks) {
+  let dirty = false;
+  const ensured = {
+    mood: null,
+    rating: null,
+    memory: '',
+    location: '',
+    heardAt: null,
+    season: null,
+    era: null,
+    energy: null,
+    collectReason: null,
+    dominantHex: null,
+    accentHex: null,
+    textContrastHex: null,
+    uiLayoutTemplate: null,
+    contextMoments: []
+  };
+  for (const [key, value] of Object.entries(ensured)) {
+    if (!(key in card)) {
+      card[key] = value;
+      dirty = true;
+    }
+  }
+  const before = JSON.stringify({
+    dominantHex: card.dominantHex,
+    accentHex: card.accentHex,
+    textContrastHex: card.textContrastHex,
+    uiLayoutTemplate: card.uiLayoutTemplate,
+    contextMoments: card.contextMoments
+  });
+  if (!card.era && card.year) {
+    card.era = deriveEra(card.year);
+    dirty = true;
+  }
+  if (!card.season && (card.heardAt || card.createdAt)) {
+    card.season = deriveSeason(card.heardAt || card.createdAt);
+    dirty = true;
+  }
+  applyCollectorPresentation(card, cards, decks);
+  const after = JSON.stringify({
+    dominantHex: card.dominantHex,
+    accentHex: card.accentHex,
+    textContrastHex: card.textContrastHex,
+    uiLayoutTemplate: card.uiLayoutTemplate,
+    contextMoments: card.contextMoments
+  });
+  return dirty || before !== after;
+}
+
+function buildDetailAmbientFallback(card) {
+  const dominant = card?.dominantHex || card?.palette?.darkVibrant || '#1A1A1E';
+  const accent = card?.accentHex || card?.palette?.lightVibrant || '#C9A84C';
+  return `radial-gradient(circle at top, ${rgba(accent, 0.25)} 0%, transparent 46%), linear-gradient(180deg, ${rgba(dominant, 0.92)} 0%, rgba(14,14,16,0.98) 70%, rgba(14,14,16,1) 100%)`;
+}
+
+async function createAmbientSnapshot(card) {
+  if (!card || !card.coverArtUrl) return null;
+  if (detailAmbientCache.has(card.id)) return detailAmbientCache.get(card.id);
+  const src = await new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 160;
+        canvas.height = 160;
+        const ctx = canvas.getContext('2d');
+        ctx.filter = 'blur(32px) saturate(1.35) brightness(0.9)';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.55));
+      } catch (e) {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = getArtUrl(card.coverArtUrl, 300);
+  });
+  detailAmbientCache.set(card.id, src);
+  return src;
+}
+
+async function setDetailAmbient(card) {
+  const ambient = document.getElementById('cardDetailAmbient');
+  if (!ambient || !card) return;
+  ambient.style.backgroundImage = buildDetailAmbientFallback(card);
+  const snapshot = await createAmbientSnapshot(card);
+  if (snapshot && currentDetailCard && currentDetailCard.id === card.id) {
+    ambient.style.backgroundImage = `linear-gradient(180deg, rgba(14,14,16,0.18) 0%, rgba(14,14,16,0.9) 72%), url(${snapshot})`;
+  }
 }
 
 const MOOD_PRESETS = ["Euphoric","Melancholic","Chill","Hype","Nostalgic","Romantic","Dark","Peaceful","Angry","Bittersweet"];
@@ -4241,9 +5256,15 @@ async function createCard(track, opts = {}) {
     energy: null,
     collectReason: opts.prompt || null,
     addedVia: 'search',
-    isFirstEver: allCards.length === 0
+    isFirstEver: allCards.length === 0,
+    dominantHex: null,
+    accentHex: null,
+    textContrastHex: null,
+    uiLayoutTemplate: null,
+    contextMoments: []
   };
 
+  applyCollectorPresentation(card, [...allCards, card], allDecks);
   await dbPut('cards', card);
   logEvent('card_creation_completed', { cardId: card.id, trackId: card.trackId, paletteSource: paletteResult.source });
   return card;
@@ -4352,6 +5373,8 @@ function switchTab(tab, force = false) {
         document.getElementById('searchEmpty').style.display = 'block';
       }
     }
+    showRecentSearches();
+    showSearchBrowse();
     setTimeout(() => document.getElementById('searchInput')?.focus(), 250);
   }
   } catch(e) { console.error('Tab switch error:', e); }
@@ -4638,6 +5661,42 @@ function escHtml(s) { const d = document.createElement('div'); d.textContent = s
 async function refreshData() {
   allCards = await dbGetAll('cards');
   allDecks = await dbGetAll('decks');
+  const dirtyCards = [];
+  allCards.forEach(card => {
+    if (normalizeCardRecord(card, allCards, allDecks)) dirtyCards.push(card);
+  });
+  if (dirtyCards.length) {
+    await Promise.all(dirtyCards.map(card => dbPut('cards', card)));
+  }
+}
+
+function getCardFrameStyle(card) {
+  const palette = card?.palette || {};
+  return {
+    tier: visualEngine.getEffectiveFrameTier(card),
+    dominant: palette.dominant || palette.vibrant || 'var(--color-gold)',
+    accent: palette.accent || palette.lightVibrant || 'var(--color-gold)'
+  };
+}
+
+function buildCardFrameAttrs(card, extraStyle = '') {
+  const { tier, dominant, accent } = getCardFrameStyle(card);
+  const styles = [
+    extraStyle,
+    `--frame-dominant:${dominant}`,
+    `--frame-accent:${accent}`
+  ].filter(Boolean).join('; ');
+  return `data-frame-tier="${tier}" style="${styles}"`;
+}
+
+function renderCardToplineHTML(card, extraClass = '') {
+  const classes = ['grid-card-shell-top', extraClass].filter(Boolean).join(' ');
+  return `
+    <div class="${classes}">
+      <span class="grid-card-brand">heard.</span>
+      <span class="grid-card-number">#${getCardCatalogNumber(card)}</span>
+    </div>
+  `;
 }
 
 // ── COLLECTION RENDERING ──
@@ -4649,13 +5708,17 @@ function getFilteredSortedCards() {
     const q = collectionSearchQuery.toLowerCase();
     cards = cards.filter(c =>
       c.title.toLowerCase().includes(q) ||
-      c.artist.toLowerCase().includes(q)
+      c.artist.toLowerCase().includes(q) ||
+      (c.memory || '').toLowerCase().includes(q) ||
+      (c.notes || '').toLowerCase().includes(q) ||
+      (c.tags || []).some(tag => tag.toLowerCase().includes(q))
     );
   }
 
   // Favorites filter
   if (activeFilters.favorites) cards = cards.filter(c => c.isFavorite);
   if (activeFilters.pinned) cards = cards.filter(c => c.isPinned);
+  if (activeFilters.mood) cards = cards.filter(c => (c.mood || '').toLowerCase() === activeFilters.mood.toLowerCase());
 
   // Sort
   switch (currentSort) {
@@ -4663,10 +5726,10 @@ function getFilteredSortedCards() {
     case 'date-asc': cards.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break;
     case 'artist-asc': cards.sort((a, b) => a.artist.localeCompare(b.artist)); break;
     case 'artist-desc': cards.sort((a, b) => b.artist.localeCompare(a.artist)); break;
-    case 'title-asc': sorted.sort((a,b) => (a.title||'').localeCompare(b.title||'')); break;
-      case 'rating': sorted.sort((a,b) => (b.rating||0) - (a.rating||0)); break;
-      case 'recent-play': sorted.sort((a,b) => (b.lastViewedAt||'').localeCompare(a.lastViewedAt||'')); break;
-      case 'views': cards.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)); break;
+    case 'title-asc': cards.sort((a,b) => (a.title||'').localeCompare(b.title||'')); break;
+    case 'rating': cards.sort((a,b) => (b.rating||0) - (a.rating||0)); break;
+    case 'recent-play': cards.sort((a,b) => (b.lastViewedAt||'').localeCompare(a.lastViewedAt||'')); break;
+    case 'views': cards.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)); break;
     case 'year-desc': cards.sort((a, b) => (b.year || 0) - (a.year || 0)); break;
     case 'year-asc': cards.sort((a, b) => (a.year || 0) - (b.year || 0)); break;
   }
@@ -4684,35 +5747,38 @@ let _renderedCount = 0;
 let _scrollObserver = null;
 
 function renderCardHTML(card, idx) {
-  const pal = card.palette || {};
-  const frameTier = visualEngine.getEffectiveFrameTier(card);
-  const frameDom = pal.dominant || pal.vibrant || 'var(--color-gold)';
-  const frameAcc = pal.accent || pal.lightVibrant || 'var(--color-gold)';
+  const moment = (card.contextMoments || [])[0];
+  const frameAttrs = buildCardFrameAttrs(card, `animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both`);
   return `
-    <div class="grid-card" data-id="${card.id}" data-frame-tier="${frameTier}"
-         style="animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both; --frame-dominant:${frameDom}; --frame-accent:${frameAcc};"
-         onclick="openCardDetail('${card.id}')"
-         oncontextmenu="event.preventDefault(); openActionSheet('${card.id}')"
-         ontouchstart="startLongPress(event, '${card.id}')"
-         ontouchend="cancelLongPress()"
-         ontouchmove="cancelLongPress()">
-      <div class="grid-card-art-wrap">
-        <img class="grid-card-art" src="${card.coverArtUrl}" alt="${escHtml(card.title)}" loading="lazy"
-             onerror="this.style.background='var(--color-surface-raised)'">
-        <div class="grid-card-gradient" style="background:linear-gradient(to top, ${card.palette?.darkVibrant || '#1A1A1E'} 0%, transparent 100%);"></div>
-        <div class="grid-card-fav ${card.isFavorite ? 'is-fav' : ''}" onclick="event.stopPropagation(); toggleFavorite('${card.id}')">
-          <svg viewBox="0 0 24 24" fill="${card.isFavorite ? '#C9A84C' : 'none'}" stroke="${card.isFavorite ? '#C9A84C' : 'white'}" stroke-width="2">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-          </svg>
+      <div class="grid-card" data-id="${card.id}" ${frameAttrs}
+           onclick="openCardDetail('${card.id}')"
+           oncontextmenu="event.preventDefault(); openActionSheet('${card.id}')"
+           ontouchstart="startLongPress(event, '${card.id}')"
+           ontouchend="cancelLongPress()"
+           ontouchmove="cancelLongPress()">
+        <div class="grid-card-art-wrap">
+          <img class="grid-card-art" src="${card.coverArtUrl}" alt="${escHtml(card.title)}" loading="lazy"
+               onerror="this.style.background='var(--color-surface-raised)'">
+          <div class="grid-card-gradient" style="background:linear-gradient(to top, ${card.palette?.darkVibrant || '#1A1A1E'} 0%, transparent 100%);"></div>
+          ${renderCardToplineHTML(card)}
+          <div class="grid-card-fav ${card.isFavorite ? 'is-fav' : ''}" onclick="event.stopPropagation(); toggleFavorite('${card.id}')">
+            <svg viewBox="0 0 24 24" fill="${card.isFavorite ? '#C9A84C' : 'none'}" stroke="${card.isFavorite ? '#C9A84C' : 'white'}" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
         </div>
         <div class="grid-card-pin ${card.isPinned ? 'show' : ''}">📌</div>
         ${renderBadgesHTML(card)}
-      </div>
-      <div class="grid-card-info">
-        <div class="title">${escHtml(card.title)}</div>
-        <div class="artist">${escHtml(card.artist)}</div>
-      </div>
-    </div>`;
+        </div>
+        <div class="grid-card-info">
+          <div class="title">${escHtml(card.title)}</div>
+          <div class="artist">${escHtml(card.artist)}</div>
+          <div class="grid-card-meta-row">
+            ${card.genre ? `<span class="grid-card-meta-pill">${escHtml(card.genre)}</span>` : ''}
+            ${card.year ? `<span class="grid-card-meta-pill">${card.year}</span>` : ''}
+          </div>
+          ${moment ? `<div class="grid-card-moment">${escHtml(moment)}</div>` : ''}
+        </div>
+      </div>`;
 }
 
 function renderNextBatch() {
@@ -4746,6 +5812,8 @@ function renderCollection() {
   const empty = document.getElementById('collectionEmpty');
   const count = document.getElementById('collectionCount');
   count.textContent = `${allCards.length} card${allCards.length !== 1 ? 's' : ''}`;
+  renderCollectionRecent(allCards);
+  renderCollectionMoodFilters(allCards);
 
   // Hide all containers first
   grid.style.display = 'none';
@@ -4871,21 +5939,23 @@ function groupCards(cards) {
 function renderListCard(card) {
   const dur = formatDuration(card.duration);
   return `<div class="list-card" onclick="openCardDetail('${card.id}')">
-    <img class="list-card-art" src="${getArtUrl(card.coverArtUrl, 100)}" alt="" loading="lazy">
-    <div class="list-card-info">
-      <div class="title">${escHtml(card.title)}</div>
-      <div class="artist">${escHtml(card.artist)}</div>
-    </div>
-    <span class="list-card-meta">${dur || (card.year || '')}</span>
-    ${card.isFavorite ? '<span class="list-card-fav"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span>' : ''}
-  </div>`;
+      <img class="list-card-art" src="${getArtUrl(card.coverArtUrl, 100)}" alt="" loading="lazy">
+      <div class="list-card-info">
+        <div class="title">${escHtml(card.title)}</div>
+        <div class="artist">${escHtml(card.artist)}${card.contextMoments?.[0] ? ' · ' + escHtml(card.contextMoments[0]) : ''}</div>
+      </div>
+      <span class="list-card-meta">#${getCardCatalogNumber(card)}${dur || card.year ? ' · ' + (dur || card.year) : ''}</span>
+      ${card.isFavorite ? '<span class="list-card-fav"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span>' : ''}
+    </div>`;
 }
 
 function renderGalleryCard(card) {
   const gradient = card.palette?.darkVibrant || '#1A1A1E';
-  return `<div class="gallery-card" onclick="openCardDetail('${card.id}')">
+  const signal = (card.contextMoments || [])[0];
+  return `<div class="gallery-card" data-id="${card.id}" ${buildCardFrameAttrs(card)} onclick="openCardDetail('${card.id}')">
     <img class="gallery-card-art" src="${card.coverArtUrl}" alt="${escHtml(card.title)}" loading="lazy">
     <div class="gallery-card-gradient" style="background:linear-gradient(to top, ${gradient} 0%, transparent 100%);"></div>
+    ${renderCardToplineHTML(card, 'gallery-card-shell-top')}
     <div class="gallery-card-info">
       <div class="title">${escHtml(card.title)}</div>
       <div class="artist">${escHtml(card.artist)}</div>
@@ -4893,9 +5963,63 @@ function renderGalleryCard(card) {
         ${card.genre ? `<span class="meta-pill">${escHtml(card.genre)}</span>` : ''}
         ${card.year ? `<span class="meta-pill">${card.year}</span>` : ''}
       </div>
+      ${signal ? `<div class="gallery-card-signal">${escHtml(signal)}</div>` : ''}
     </div>
+    ${renderBadgesHTML(card)}
     ${card.isFavorite ? '<span class="gallery-card-fav"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span>' : ''}
   </div>`;
+}
+
+function setMoodFilter(mood) {
+  activeFilters.mood = activeFilters.mood === mood ? null : mood;
+  logEvent('collection_filtered', { filterType: 'mood', filterValue: activeFilters.mood });
+  renderCollection();
+}
+
+function renderCollectionRecent(cards) {
+  const section = document.getElementById('collectionRecentSection');
+  const strip = document.getElementById('collectionRecentStrip');
+  if (!section || !strip) return;
+  const recent = [...cards].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 6);
+  if (!recent.length) {
+    section.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+  section.style.display = 'block';
+  strip.innerHTML = recent.map(card => `
+    <button class="recent-claim-card" onclick="openCardDetail('${card.id}')">
+      <img src="${getArtUrl(card.coverArtUrl, 200)}" alt="${escHtml(card.title)}" loading="lazy">
+      <div class="recent-claim-topline">
+        <span class="recent-claim-brand">heard.</span>
+        <span class="recent-claim-number">#${getCardCatalogNumber(card)}</span>
+      </div>
+      <div class="recent-claim-info">
+        <div class="recent-claim-title">${escHtml(card.title)}</div>
+        <div class="recent-claim-artist">${escHtml(card.artist)}</div>
+      </div>
+    </button>
+  `).join('');
+}
+
+function renderCollectionMoodFilters(cards) {
+  const wrap = document.getElementById('collectionMoodFilters');
+  if (!wrap) return;
+  const counts = {};
+  cards.forEach(card => {
+    if (card.mood) counts[card.mood] = (counts[card.mood] || 0) + 1;
+  });
+  const moods = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (!moods.length) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'flex';
+  wrap.innerHTML = [
+    `<button class="mood-filter-chip ${!activeFilters.mood ? 'active' : ''}" onclick="setMoodFilter(null)">all moods</button>`,
+    ...moods.map(([mood, count]) => `<button class="mood-filter-chip ${activeFilters.mood === mood ? 'active' : ''}" onclick="setMoodFilter('${escHtml(mood)}')">${escHtml(mood)} · ${count}</button>`)
+  ].join('');
 }
 
 function handleSort() {
@@ -4916,6 +6040,12 @@ function toggleFilter(type) {
 // ── SEARCH ENHANCEMENTS (v1.8) ──
 let recentSearches = [];
 const GENRE_SUGGESTIONS = ['Hip-Hop','R&B','Pop','Rock','Jazz','Electronic','Classical','Country','Latin','Indie','Soul','Reggae'];
+const TRENDING_SEARCHES = [
+  { label: 'frank ocean', note: 'late-night staples' },
+  { label: '90s alternative', note: 'collector gravity' },
+  { label: 'sade', note: 'warm memory picks' },
+  { label: '2011', note: 'era-first searching' }
+];
 
 function loadRecentSearches() {
   try {
@@ -4950,8 +6080,22 @@ function showRecentSearches() {
   if (recentSearches.length === 0) { el.style.display = 'none'; return; }
   el.style.display = 'block';
   pills.innerHTML = recentSearches.map(q =>
-    `<span class="search-recent-pill" onclick="fillSearch('${escHtml(q)}')">${escHtml(q)}<span class="remove" onclick="event.stopPropagation(); removeRecentSearch('${escHtml(q)}')">×</span></span>`
-  ).join('');
+      `<span class="search-recent-pill" onclick="fillSearch('${escHtml(q)}')">${escHtml(q)}<span class="remove" onclick="event.stopPropagation(); removeRecentSearch('${escHtml(q)}')">×</span></span>`
+    ).join('');
+}
+
+function showSearchBrowse() {
+  const browse = document.getElementById('searchBrowse');
+  const trending = document.getElementById('searchTrending');
+  const input = document.getElementById('searchInput');
+  if (!browse || !trending) return;
+  const isIdle = !input || !input.value.trim();
+  browse.style.display = isIdle ? 'flex' : 'none';
+  trending.innerHTML = TRENDING_SEARCHES.map(item => `
+    <button class="search-trend-chip" onclick="fillSearch('${escHtml(item.label)}')">
+      <strong>${escHtml(item.label)}</strong> · ${escHtml(item.note)}
+    </button>
+  `).join('');
 }
 
 function fillSearch(query) {
@@ -5010,6 +6154,9 @@ function clearSearchInput() {
   toggleSearchClear();
   document.getElementById('searchResults').innerHTML = '';
   document.getElementById('searchEmpty').style.display = 'block';
+  document.getElementById('searchResultCount').style.display = 'none';
+  showRecentSearches();
+  showSearchBrowse();
   if (typeof stopSearchPreview === 'function') stopSearchPreview();
 }
 
@@ -5017,6 +6164,9 @@ async function searchiTunes(query) {
   if (!query || query.length < 2) {
     document.getElementById('searchResults').innerHTML = '';
     document.getElementById('searchEmpty').style.display = 'block';
+    document.getElementById('searchResultCount').style.display = 'none';
+    showRecentSearches();
+    showSearchBrowse();
     return;
   }
   if (!navigator.onLine) {
@@ -5030,6 +6180,8 @@ async function searchiTunes(query) {
   document.getElementById('searchOffline').style.display = 'none';
   const recentEl = document.getElementById('searchRecent');
   if (recentEl) recentEl.style.display = 'none';
+  const browseEl = document.getElementById('searchBrowse');
+  if (browseEl) browseEl.style.display = 'none';
   const countEl = document.getElementById('searchResultCount');
   if (countEl) countEl.style.display = 'none';
   showSearchSkeleton();
@@ -5049,23 +6201,29 @@ async function searchiTunes(query) {
       return;
     }
 
-    results.innerHTML = data.results.map((r, idx) => {
-      const dur = r.trackTimeMillis ? formatDuration(r.trackTimeMillis) : '';
-      const inCollection = existingTrackIds.has(r.trackId);
-      return `
-      <div class="search-result-item${inCollection ? ' in-collection' : ''}" data-idx="${idx}">
-        <img src="${getArtUrl(r.artworkUrl100, 100)}" alt="" loading="lazy" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')">
-        <div class="search-result-info" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')">
-          <div class="title">${escHtml(r.trackName)}</div>
-          <div class="artist">${escHtml(r.artistName)}</div>
-          <div class="year">${r.releaseDate ? new Date(r.releaseDate).getFullYear() : ''} · ${escHtml(r.primaryGenreName || '')}${dur ? ' · ' + dur : ''}</div>
-        </div>
-        ${inCollection ? '<span class="in-collection-badge" title="In Collection"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--color-gold)" stroke="none"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></span>' : ''}
-        ${r.previewUrl ? `<button class="search-preview-btn" onclick="event.stopPropagation(); toggleSearchPreview(${idx})" id="searchPreviewBtn_${idx}">
-          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 19,12 8,19"/></svg>
-        </button>` : ''}
-      </div>`;
-    }).join('');
+      results.innerHTML = data.results.map((r, idx) => {
+        const dur = r.trackTimeMillis ? formatDuration(r.trackTimeMillis) : '';
+        const inCollection = existingTrackIds.has(r.trackId);
+        const existingCard = inCollection ? allCards.find(c => c.trackId === r.trackId) : null;
+        const releaseYear = r.releaseDate ? new Date(r.releaseDate).getFullYear() : '';
+        return `
+        <div class="search-result-item${inCollection ? ' in-collection' : ''}" data-idx="${idx}">
+          <img src="${getArtUrl(r.artworkUrl100, 100)}" alt="" loading="lazy" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')">
+          <div class="search-result-info" onclick="handleSearchResultTap(${idx}, '${escHtml(query)}')">
+            <div class="title">${escHtml(r.trackName)}</div>
+            <div class="artist">${escHtml(r.artistName)}</div>
+            <div class="search-result-pillrow">
+              ${releaseYear ? `<span class="search-result-pill">${releaseYear}</span>` : ''}
+              ${r.primaryGenreName ? `<span class="search-result-pill">${escHtml(r.primaryGenreName)}</span>` : ''}
+              ${dur ? `<span class="search-result-pill">${dur}</span>` : ''}
+            </div>
+          </div>
+          ${r.previewUrl ? `<button class="search-preview-btn" onclick="event.stopPropagation(); toggleSearchPreview(${idx})" id="searchPreviewBtn_${idx}">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8,5 19,12 8,19"/></svg>
+          </button>` : ''}
+          <button class="search-claim-btn ${inCollection ? 'collected' : ''}" onclick="event.stopPropagation(); ${inCollection && existingCard ? `openCardDetail('${existingCard.id}')` : `handleSearchResultTap(${idx}, '${escHtml(query)}')`}">${inCollection ? 'View' : 'Claim'}</button>
+        </div>`;
+      }).join('');
 
     // Store results for tap handling
     window._lastSearchResults = data.results;
@@ -5290,6 +6448,11 @@ async function animateCardCreation(track) {
   // Create card in DB
   const card = await createCard(track);
   await refreshData();
+  logEvent('delight_triggered', { type: 'card_claimed', cardId: card.id });
+  const collectorMilestone = getCollectorMilestone(allCards.length);
+  if (collectorMilestone) {
+    logEvent('milestone_seen', { type: 'vault_cards', milestone: collectorMilestone, cardId: card.id });
+  }
 
   // Fly to collection — smoother trajectory
   cardEl.style.transition = 'transform 600ms var(--ease-standard), opacity 400ms ease 200ms';
@@ -5313,34 +6476,121 @@ async function animateCardCreation(track) {
   cardEl.style.transition = '';
   cardEl.style.boxShadow = '';
 
-  showToast(`"${card.title}" added to collection`);
+  showToast(collectorMilestone ? `Vault milestone: ${collectorMilestone} cards claimed` : `"${card.title}" claimed for your vault`);
   if (currentTab === 'collection') renderCollection();
 }
 
 // ── CARD DETAIL ──
-async function openCardDetail(cardId) {
+function handleContextMomentTap(cardId, moment) {
+  logEvent('fact_viewed', { cardId, moment });
+  showToast(moment);
+}
+
+function toggleDetailFace(event) {
+  if (event) event.stopPropagation();
+  const inner = document.getElementById('cardDetailInner');
+  if (!inner) return;
+  if (inner.classList.contains('flipped')) forceFlipBack();
+  else flipCardDetail({ target: inner, closest: () => null });
+}
+
+function syncDetailFlipHint() {
+  const inner = document.getElementById('cardDetailInner');
+  const hint = document.getElementById('cardDetailFlipHint');
+  if (!hint) return;
+  hint.textContent = inner && inner.classList.contains('flipped') ? 'see front' : 'tap to flip';
+}
+
+function getDetailRefreshOptions(overrides = {}) {
+  const inner = document.getElementById('cardDetailInner');
+  return {
+    trackView: false,
+    preserveFlip: !!(inner && inner.classList.contains('flipped')),
+    ...overrides
+  };
+}
+
+function getCollectorMilestone(totalCards) {
+  return COLLECTOR_MILESTONES.includes(totalCards) ? totalCards : null;
+}
+
+function getDeckMilestoneHit(deck) {
+  if (!deck) return null;
+  const milestones = [5, 10, 25];
+  deck.milestonesSeen = Array.isArray(deck.milestonesSeen) ? deck.milestonesSeen : [];
+  const hit = milestones.find(m => (deck.cardIds || []).length === m && !deck.milestonesSeen.includes(m));
+  if (hit) deck.milestonesSeen.push(hit);
+  return hit || null;
+}
+
+function getDeckCardIds(deck) {
+  if (!deck) return [];
+  const cards = deck.isSmart
+    ? getSmartDeckCards(deck)
+    : (deck.cardIds || []).map(id => allCards.find(c => c.id === id)).filter(Boolean);
+  return cards.map(card => card.id);
+}
+
+function openDeckCardDetail(deckId, cardId) {
+  const deck = allDecks.find(d => d.id === deckId);
+  if (!deck) return;
+  openCardDetail(cardId, { cardList: getDeckCardIds(deck) });
+}
+
+async function refreshOpenDetailCard(cardId, options = {}) {
+  if (!currentDetailCard || currentDetailCard.id !== cardId) return;
+  await openCardDetail(cardId, { ...getDetailRefreshOptions(), ...options });
+}
+
+async function openCardDetail(cardId, options = {}) {
   const card = allCards.find(c => c.id === cardId);
   if (!card) return;
+  const { trackView = true, preserveFlip = false, cardList = null } = options;
   currentDetailCard = card;
   // Track position for swipe nav
-  if (_detailCardList.length === 0 || !_detailCardList.includes(cardId)) {
+  if (Array.isArray(cardList) && cardList.length) {
+    _detailCardList = cardList.filter(id => allCards.some(c => c.id === id));
+  } else if (_detailCardList.length === 0 || !_detailCardList.includes(cardId)) {
     _detailCardList = getFilteredSortedCards().map(c => c.id);
   }
+  if (!_detailCardList.includes(cardId)) _detailCardList = [cardId];
   _detailCardIndex = _detailCardList.indexOf(cardId);
-  haptic('light');
-
-  // Increment view count
-  card.viewCount = (card.viewCount || 0) + 1;
-  card.lastViewedAt = new Date().toISOString();
-  await dbPut('cards', card);
-  logEvent('card_viewed', { cardId });
+  if (trackView) haptic('light');
 
   const links = getStreamingLinks(card);
   const inner = document.getElementById('cardDetailInner');
+  const shouldStayFlipped = preserveFlip && inner.classList.contains('flipped');
   inner.classList.remove('flipped');
   inner.style.transform = '';
   inner.style.transition = '';
   delete inner.dataset.flipping;
+  document.body.classList.add('detail-focus-mode');
+  if (trackView) {
+    card.viewCount = (card.viewCount || 0) + 1;
+    card.lastViewedAt = new Date().toISOString();
+    applyCollectorPresentation(card, allCards, allDecks);
+    await dbPut('cards', card);
+    logEvent('card_viewed', { cardId });
+    if ((card.viewCount || 0) > 1) logEvent('card_revisit', { cardId, viewCount: card.viewCount });
+  } else {
+    applyCollectorPresentation(card, allCards, allDecks);
+  }
+  setDetailAmbient(card);
+  const positionEl = document.getElementById('cardDetailPosition');
+  const flipHint = document.getElementById('cardDetailFlipHint');
+  const contextRail = document.getElementById('cardDetailContextChips');
+  const detailBack = document.getElementById('detailBack');
+  const cardNo = getCardCatalogNumber(card);
+  const signal = (card.contextMoments || [])[0];
+  const railMoments = (card.contextMoments && card.contextMoments.length)
+    ? card.contextMoments
+    : [card.genre, card.era, card.season].filter(Boolean);
+  const frontPills = [
+    card.genre ? `<span class="card-detail-front-pill">${escHtml(card.genre)}</span>` : '',
+    card.year ? `<span class="card-detail-front-pill">${card.year}</span>` : '',
+    card.era ? `<span class="card-detail-front-pill">${escHtml(card.era)}</span>` : '',
+    card.season ? `<span class="card-detail-front-pill">${escHtml(card.season)}</span>` : ''
+  ].filter(Boolean).join('');
 
   // Apply frame to card detail
   applyFrameToElement(inner, card);
@@ -5349,10 +6599,16 @@ async function openCardDetail(cardId) {
   document.getElementById('detailFront').innerHTML = `
     <img class="card-detail-front-art" src="${card.coverArtUrl}" alt="${escHtml(card.title)}" onerror="this.style.background='var(--color-surface-raised)'">
     <div class="card-detail-front-gradient" style="background:linear-gradient(to top, ${card.palette?.darkVibrant || '#1A1A1E'} 0%, transparent 100%);"></div>
+    <div class="grid-card-shell-top card-detail-front-topline">
+      <span class="card-detail-front-brand">heard.</span>
+      <span class="card-detail-front-number">#${cardNo}</span>
+    </div>
     <div class="card-detail-front-meta">
       <div class="title">${escHtml(card.title)}</div>
       <div class="artist">${escHtml(card.artist)}</div>
       <div class="album-year">${escHtml(card.album)}${card.year ? ' · ' + card.year : ''}</div>
+      ${frontPills ? `<div class="card-detail-front-pillrow">${frontPills}</div>` : ''}
+      ${signal ? `<div class="card-detail-front-signal"><strong>collector signal</strong> ${escHtml(signal)}</div>` : ''}
     </div>
     <button class="card-detail-fav-btn" onclick="event.stopPropagation(); toggleFavoriteDetail()">
       <svg viewBox="0 0 24 24" fill="${card.isFavorite ? '#C9A84C' : 'none'}" stroke="${card.isFavorite ? '#C9A84C' : 'white'}" stroke-width="2">
@@ -5393,7 +6649,8 @@ async function openCardDetail(cardId) {
   const heardAtDisplay = card.heardAt ? `<span class="context-item set" onclick="event.stopPropagation(); editContext('heardAt')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${new Date(card.heardAt).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : `<span class="context-item" onclick="event.stopPropagation(); editContext('heardAt')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>When?</span>`;
   const listenMs = card.previewListenMs || 0;
   const listenStr = listenMs >= 60000 ? Math.floor(listenMs/60000) + 'm ' + Math.floor((listenMs%60000)/1000) + 's' : Math.floor(listenMs/1000) + 's';
-  document.getElementById('detailBack').innerHTML = `
+  detailBack.className = `card-detail-face card-detail-back ${card.uiLayoutTemplate || 'layout-era-focused'}`;
+  detailBack.innerHTML = `
     <div class="card-back-header">
       <div class="back-title">${escHtml(card.title)}</div>
       <div class="back-artist">${escHtml(card.artist)}</div>
@@ -5423,6 +6680,13 @@ async function openCardDetail(cardId) {
           ${card.season ? `<span class="context-item set" style="cursor:default;">${card.season}</span>` : ''}
         </div>
       </div>
+      ${(card.contextMoments || []).length ? `
+      <div class="card-back-section">
+        <div class="card-back-label">Context</div>
+        <div class="card-context-moments">
+          ${(card.contextMoments || []).map(moment => `<button class="card-context-moment" onclick='event.stopPropagation(); handleContextMomentTap("${card.id}", ${JSON.stringify(moment)})'>${escHtml(moment)}</button>`).join('')}
+        </div>
+      </div>` : ''}
       <div class="card-back-section">
         <div class="card-back-label">Stats</div>
         <div class="card-stats-grid">
@@ -5466,12 +6730,16 @@ async function openCardDetail(cardId) {
   `;
 
   // Position indicator
-  const posEl = document.getElementById('cardDetailPosition');
-  if (posEl && _detailCardList.length > 1) {
-    posEl.textContent = (_detailCardIndex + 1) + ' of ' + _detailCardList.length;
-    posEl.style.display = 'block';
-  } else if (posEl) {
-    posEl.style.display = 'none';
+  if (positionEl && _detailCardList.length > 1) {
+    positionEl.textContent = (_detailCardIndex + 1) + ' of ' + _detailCardList.length;
+    positionEl.style.display = 'block';
+  } else if (positionEl) {
+    positionEl.style.display = 'none';
+  }
+  if (shouldStayFlipped) inner.classList.add('flipped');
+  if (flipHint) syncDetailFlipHint();
+  if (contextRail) {
+    contextRail.innerHTML = railMoments.map(moment => `<button class="detail-context-chip" onclick='event.stopPropagation(); handleContextMomentTap("${card.id}", ${JSON.stringify(moment)})'>${escHtml(moment)}</button>`).join('');
   }
 
   document.getElementById('cardDetailOverlay').classList.add('show');
@@ -5483,9 +6751,10 @@ function flipCardDetail(e) {
   if (!inner || inner.dataset.flipping) return;
   inner.dataset.flipping = '1';
   haptic('medium');
-  if (currentDetailCard) logEvent('card_flipped', { cardId: currentDetailCard.id });
 
   inner.classList.toggle('flipped');
+  if (currentDetailCard) logEvent('card_flip', { cardId: currentDetailCard.id, side: inner.classList.contains('flipped') ? 'back' : 'front' });
+  syncDetailFlipHint();
 
   // Emit flip particles at midpoint
   setTimeout(() => {
@@ -5507,9 +6776,10 @@ function forceFlipBack() {
   if (!inner || !inner.classList.contains('flipped') || inner.dataset.flipping) return;
   inner.dataset.flipping = '1';
   haptic('medium');
-  if (currentDetailCard) logEvent('card_flipped', { cardId: currentDetailCard.id });
+  if (currentDetailCard) logEvent('card_flip', { cardId: currentDetailCard.id, side: 'front' });
 
   inner.classList.remove('flipped');
+  syncDetailFlipHint();
 
   setTimeout(() => {
     if (visualEngine.shouldAnimate() && currentDetailCard) {
@@ -5526,12 +6796,14 @@ function forceFlipBack() {
 }
 
 function closeCardDetailOnBg(e) {
-  if (e.target === document.getElementById('cardDetailOverlay')) closeCardDetail();
+  if (e.target.closest('.card-detail-stage, .card-detail-meta-rail, .card-detail-close, .card-detail-position')) return;
+  closeCardDetail();
 }
 
 function closeCardDetail() {
   stopPreview();
   document.getElementById('cardDetailOverlay').classList.remove('show');
+  document.body.classList.remove('detail-focus-mode');
   // Reset flip state for next open
   const inner = document.getElementById('cardDetailInner');
   if (inner) {
@@ -5542,6 +6814,16 @@ function closeCardDetail() {
     // Re-enable transitions after reset
     requestAnimationFrame(() => { inner.style.transition = ''; });
   }
+  const ambient = document.getElementById('cardDetailAmbient');
+  if (ambient) ambient.style.backgroundImage = '';
+  const contextRail = document.getElementById('cardDetailContextChips');
+  if (contextRail) contextRail.innerHTML = '';
+  const positionEl = document.getElementById('cardDetailPosition');
+  if (positionEl) {
+    positionEl.textContent = '';
+    positionEl.style.display = 'none';
+  }
+  syncDetailFlipHint();
   currentDetailCard = null;
   _detailCardList = [];
   _detailCardIndex = -1;
@@ -5553,8 +6835,8 @@ async function toggleFavoriteDetail() {
   currentDetailCard.isFavorite = !currentDetailCard.isFavorite;
   await dbPut('cards', currentDetailCard);
   logEvent(currentDetailCard.isFavorite ? 'card_favorited' : 'card_unfavorited', { cardId: currentDetailCard.id });
-  openCardDetail(currentDetailCard.id);
   await refreshData();
+  await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
 }
 
 async function toggleFavorite(cardId) {
@@ -5595,7 +6877,7 @@ async function addTagUI() {
       logEvent('tag_added', { tag: val, cardId: currentDetailCard.id, isNew: true });
       await refreshData();
     }
-    openCardDetail(currentDetailCard.id);
+    await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
   };
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') finish(); if (e.key === 'Escape') { input.remove(); btn.style.display = ''; } });
@@ -5608,7 +6890,7 @@ async function removeTag(cardId, tag) {
   card.tags = card.tags.filter(t => t !== tag);
   await dbPut('cards', card);
   await refreshData();
-  if (currentDetailCard && currentDetailCard.id === cardId) openCardDetail(cardId);
+  if (currentDetailCard && currentDetailCard.id === cardId) await openCardDetail(cardId, getDetailRefreshOptions());
 }
 
 
@@ -5624,7 +6906,8 @@ async function setRating(val) {
   haptic('light');
   currentDetailCard.rating = currentDetailCard.rating === val ? null : val;
   await dbPut('cards', currentDetailCard);
-  openCardDetail(currentDetailCard.id);
+  await refreshData();
+  await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
 }
 
 async function togglePinDetail() {
@@ -5633,8 +6916,8 @@ async function togglePinDetail() {
   currentDetailCard.isPinned = !currentDetailCard.isPinned;
   await dbPut('cards', currentDetailCard);
   logEvent(currentDetailCard.isPinned ? 'card_pinned' : 'card_unpinned', { cardId: currentDetailCard.id });
-  openCardDetail(currentDetailCard.id);
   await refreshData();
+  await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
 }
 
 function openMoodPicker() {
@@ -5657,7 +6940,8 @@ async function selectMood(mood) {
   currentDetailCard.mood = currentDetailCard.mood === mood ? null : mood;
   await dbPut('cards', currentDetailCard);
   closeMoodPicker();
-  openCardDetail(currentDetailCard.id);
+  await refreshData();
+  await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
 }
 
 async function clearMoodSelection() {
@@ -5665,7 +6949,8 @@ async function clearMoodSelection() {
   currentDetailCard.mood = null;
   await dbPut('cards', currentDetailCard);
   closeMoodPicker();
-  openCardDetail(currentDetailCard.id);
+  await refreshData();
+  await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
 }
 
 async function editContext(field) {
@@ -5673,18 +6958,30 @@ async function editContext(field) {
   if (field === 'location') {
     const val = prompt('Where did you hear this song?', currentDetailCard.location || '');
     if (val !== null) {
-      currentDetailCard.location = val;
+      currentDetailCard.location = val.trim();
       await dbPut('cards', currentDetailCard);
-      openCardDetail(currentDetailCard.id);
+      await refreshData();
+      await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
     }
   } else if (field === 'heardAt') {
     const val = prompt('When did you first hear this? (YYYY-MM or YYYY-MM-DD)', currentDetailCard.heardAt ? currentDetailCard.heardAt.slice(0,10) : '');
-    if (val !== null && val) {
-      currentDetailCard.heardAt = new Date(val).toISOString();
+    if (val === null) return;
+    const trimmed = val.trim();
+    if (!trimmed) {
+      currentDetailCard.heardAt = null;
+      currentDetailCard.season = null;
+    } else {
+      const parsed = new Date(trimmed);
+      if (Number.isNaN(parsed.getTime())) {
+        showToast('Use YYYY-MM or YYYY-MM-DD', true);
+        return;
+      }
+      currentDetailCard.heardAt = parsed.toISOString();
       currentDetailCard.season = deriveSeason(currentDetailCard.heardAt);
-      await dbPut('cards', currentDetailCard);
-      openCardDetail(currentDetailCard.id);
     }
+    await dbPut('cards', currentDetailCard);
+    await refreshData();
+    await openCardDetail(currentDetailCard.id, getDetailRefreshOptions());
   }
 }
 
@@ -6003,6 +7300,8 @@ function openDeckPicker(cardId) {
   deckPickerCardId = cardId;
   const manualDecks = allDecks.filter(d => !d.isSmart);
   const list = document.getElementById('deckPickerList');
+  const title = document.querySelector('#deckPickerOverlay .deck-picker-title');
+  if (title) title.textContent = 'Add to Deck';
 
   list.innerHTML = manualDecks.map(d => {
     const alreadyInDeck = d.cardIds.includes(cardId);
@@ -6026,35 +7325,42 @@ function openDeckPicker(cardId) {
 
 function closeDeckPicker() {
   document.getElementById('deckPickerOverlay').classList.remove('show');
+  const title = document.querySelector('#deckPickerOverlay .deck-picker-title');
+  if (title) title.textContent = 'Add to Deck';
   deckPickerCardId = null;
 }
 
 async function addCardToDeck(deckId) {
   const deck = allDecks.find(d => d.id === deckId);
   if (!deck || !deckPickerCardId) return;
-  if (deck.cardIds.length >= 25 && !deck.isSmart) {
-    showToast('Deck is full (max 25 cards)', true);
-    return;
-  }
-  if (deck.cardIds.includes(deckPickerCardId)) {
+  const cardId = deckPickerCardId;
+  if (deck.cardIds.includes(cardId)) {
     showToast('Already in this deck');
     closeDeckPicker();
     return;
   }
-  deck.cardIds.push(deckPickerCardId);
+  if (deck.cardIds.length >= 25 && !deck.isSmart) {
+    showToast('Deck is full (max 25 cards)', true);
+    return;
+  }
+  deck.cardIds.push(cardId);
   deck.updatedAt = new Date().toISOString();
+  const deckMilestone = getDeckMilestoneHit(deck);
   await dbPut('decks', deck);
   haptic('medium');
-  logEvent('deck_card_added', { deckId, cardId: deckPickerCardId });
+  logEvent('deck_card_added', { deckId, cardId });
+  if (deckMilestone) logEvent('deck_completed', { deckId, milestone: deckMilestone });
   await refreshData();
   closeDeckPicker();
-  showToast(`Added to "${deck.name}"`);
+  await refreshOpenDetailCard(cardId, { cardList: getDeckCardIds(allDecks.find(d => d.id === deckId)) });
+  if (currentDeckView && currentDeckView.id === deckId) openDeckView(deckId);
+  showToast(deckMilestone ? `"${deck.name}" hit ${deckMilestone} cards` : `Added to "${deck.name}"`);
 }
 
 async function createDeckAndAdd() {
-  closeDeckPicker();
   const cardId = deckPickerCardId;
-  const result = await openCreateDeckModal(cardId);
+  closeDeckPicker();
+  await openCreateDeckModal(cardId);
   // Modal handles everything: deck creation, card adding, toast
 }
 
@@ -6082,6 +7388,60 @@ function getSmartDeckCards(deck) {
   return [];
 }
 
+function getDeckCollectorLine(cards) {
+  if (!cards.length) return 'start your first stack';
+  const moodCounts = {};
+  const genreCounts = {};
+  cards.forEach(card => {
+    if (card.mood) moodCounts[card.mood] = (moodCounts[card.mood] || 0) + 1;
+    if (card.genre) genreCounts[card.genre] = (genreCounts[card.genre] || 0) + 1;
+  });
+  const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
+  if (topMood) return `${topMood[0].toLowerCase()} stack`;
+  const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0];
+  if (topGenre) return `${topGenre[0].toLowerCase()} set`;
+  return cards[0]?.contextMoments?.[0] || 'collector stack';
+}
+
+function renderDeckStackCard(deck, cards) {
+  const faceCard = cards[0];
+  const fans = cards.slice(0, 4).map(card => `<img src="${getArtUrl(card.coverArtUrl, 100)}" alt="${escHtml(card.title)}" loading="lazy">`).join('');
+  const cardCount = cards.length;
+  const meta = deck.isSmart
+    ? `${cardCount} card${cardCount !== 1 ? 's' : ''} · smart deck`
+    : `${cardCount} card${cardCount !== 1 ? 's' : ''}${deck.updatedAt ? ' · ' + timeAgo(deck.updatedAt) : ''}`;
+  const background = faceCard ? buildDetailAmbientFallback(faceCard) : 'linear-gradient(180deg, rgba(26,26,30,0.96) 0%, rgba(14,14,16,0.98) 100%)';
+  const faceAttrs = faceCard ? buildCardFrameAttrs(faceCard) : '';
+
+  return `
+    <div class="deck-card" onclick="openDeckView('${deck.id}')">
+      <div class="deck-stack-visual">
+        <div class="deck-stack-layer back" style="background:${background};"></div>
+        <div class="deck-stack-layer middle" style="background:${background};"></div>
+        <div class="deck-stack-face" ${faceAttrs}>
+          ${faceCard ? `<img src="${getArtUrl(faceCard.coverArtUrl, 400)}" alt="${escHtml(faceCard.title)}" loading="lazy">` : ''}
+          <div class="deck-stack-overlay"></div>
+          <div class="deck-stack-topline">
+            <span class="card-detail-front-brand">heard.</span>
+            <span class="deck-stack-count">${deck.isSmart ? 'smart' : '#' + String(cardCount).padStart(2, '0')}</span>
+          </div>
+          ${faceCard ? renderBadgesHTML(faceCard) : ''}
+          <div class="deck-stack-bottom">
+            <div class="deck-stack-mood">${escHtml(getDeckCollectorLine(cards))}</div>
+            <div class="deck-stack-title">${escHtml(deck.name)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="deck-info">
+        <div class="name">${escHtml(deck.name)}</div>
+        <div class="meta">${meta}</div>
+        ${fans ? `<div class="deck-mini-fans">${fans}</div>` : ''}
+      </div>
+      ${deck.isSmart ? '<span class="deck-smart-badge">Smart</span>' : ''}
+    </div>
+  `;
+}
+
 function renderDecks() {
   const list = document.getElementById('deckList');
   document.getElementById('deckView').classList.remove('show');
@@ -6106,6 +7466,12 @@ function renderDecks() {
       </button>
     </div>
   ` : '';
+
+  list.innerHTML = sorted.map(deck => {
+    const cards = deck.isSmart ? getSmartDeckCards(deck) : deck.cardIds.map(id => allCards.find(c => c.id === id)).filter(Boolean);
+    return renderDeckStackCard(deck, cards);
+  }).join('') + emptyState;
+  return;
 
   list.innerHTML = sorted.map(d => {
     const isS = d.isSmart;
@@ -6179,8 +7545,8 @@ function openDeckView(deckId) {
 
   const grid = document.getElementById('deckCardGrid');
   grid.innerHTML = actionsHtml + cards.map((card, idx) => `
-    <div class="grid-card" data-id="${card.id}" style="animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both; position:relative;"
-         onclick="openCardDetail('${card.id}')"
+    <div class="grid-card" data-id="${card.id}" ${buildCardFrameAttrs(card, `animation: fadeInUp 400ms var(--ease-standard) ${Math.min(idx * 60, 600)}ms both; position:relative`)}
+         onclick="openDeckCardDetail('${deck.id}', '${card.id}')"
          oncontextmenu="event.preventDefault(); openActionSheet('${card.id}')">
       ${!deck.isSmart ? `<div class="deck-card-controls">
         ${idx > 0 ? `<button onclick="event.stopPropagation(); moveDeckCard('${deck.id}', ${idx}, ${idx - 1})" title="Move up">↑</button>` : ''}
@@ -6190,10 +7556,14 @@ function openDeckView(deckId) {
       <div class="grid-card-art-wrap">
         <img class="grid-card-art" src="${card.coverArtUrl}" alt="${escHtml(card.title)}" loading="lazy">
         <div class="grid-card-gradient" style="background:linear-gradient(to top, ${card.palette?.darkVibrant || '#1A1A1E'} 0%, transparent 100%);"></div>
+        ${renderCardToplineHTML(card)}
+        <div class="grid-card-pin ${card.isPinned ? 'show' : ''}">📌</div>
+        ${renderBadgesHTML(card)}
       </div>
       <div class="grid-card-info">
         <div class="title">${escHtml(card.title)}</div>
         <div class="artist">${escHtml(card.artist)}</div>
+        ${(card.contextMoments || [])[0] ? `<div class="grid-card-moment">${escHtml(card.contextMoments[0])}</div>` : ''}
       </div>
     </div>
   `).join('');
@@ -6243,12 +7613,15 @@ async function addSpecificCardToDeck(deckId, cardId) {
   if (deck.cardIds.length >= 25) { showToast('Deck is full'); closeDeckPicker(); return; }
   deck.cardIds.push(cardId);
   deck.updatedAt = new Date().toISOString();
+  const deckMilestone = getDeckMilestoneHit(deck);
   await dbPut('decks', deck);
   logEvent('deck_card_added', { deckId, cardId });
+  if (deckMilestone) logEvent('deck_completed', { deckId, milestone: deckMilestone });
   await refreshData();
   closeDeckPicker();
+  await refreshOpenDetailCard(cardId, { cardList: getDeckCardIds(allDecks.find(d => d.id === deckId)) });
   openDeckView(deckId);
-  showToast('Card added');
+  showToast(deckMilestone ? `"${deck.name}" hit ${deckMilestone} cards` : 'Card added');
 }
 
 
@@ -6300,6 +7673,7 @@ async function removeCardFromDeck(deckId, cardId) {
   await dbPut('decks', deck);
   logEvent('deck_card_removed', { deckId, cardId });
   await refreshData();
+  await refreshOpenDetailCard(cardId, { cardList: getDeckCardIds(allDecks.find(d => d.id === deckId)) });
   openDeckView(deckId);
   showToast('Card removed');
   haptic('light');
@@ -6316,6 +7690,7 @@ async function moveDeckCard(deckId, fromIdx, toIdx) {
   await dbPut('decks', deck);
   logEvent('deck_card_reordered', { deckId, fromIdx, toIdx });
   await refreshData();
+  await refreshOpenDetailCard(currentDetailCard?.id, { cardList: getDeckCardIds(allDecks.find(d => d.id === deckId)) });
   openDeckView(deckId);
   haptic('selection');
 }
@@ -6372,6 +7747,11 @@ async function handleInstallClick() {
 }
 
 // ── PROFILE ──
+function openProfileInsight(label) {
+  logEvent('profile_insight_opened', { label });
+  showToast(label);
+}
+
 function renderProfile() {
   logEvent('profile_viewed');
 
@@ -6437,9 +7817,74 @@ function renderProfile() {
     </div>
   `;
 
+  const genreCounts = {};
+  const decadeCounts = {};
+  const moodCounts = {};
+  allCards.forEach(card => {
+    if (card.genre) genreCounts[card.genre] = (genreCounts[card.genre] || 0) + 1;
+    if (card.era) decadeCounts[card.era] = (decadeCounts[card.era] || 0) + 1;
+    if (card.mood) moodCounts[card.mood] = (moodCounts[card.mood] || 0) + 1;
+  });
+
   // Collection Insights
   const insightsEl = document.getElementById('profileInsights');
-  if (insightsEl && allCards.length > 0) {
+  if (insightsEl) {
+    const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0];
+    const topEra = Object.entries(decadeCounts).sort((a, b) => b[1] - a[1])[0];
+    const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
+    const revisitLeader = [...allCards].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))[0];
+    const shareLeader = [...allCards].sort((a, b) => (b.sharedCount || 0) - (a.sharedCount || 0))[0];
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 86400000);
+    const twoWeekAgo = new Date(now - 14 * 86400000);
+    const thisWeek = allCards.filter(c => new Date(c.createdAt) >= weekAgo).length;
+    const lastWeek = allCards.filter(c => { const d = new Date(c.createdAt); return d >= twoWeekAgo && d < weekAgo; }).length;
+    const diff = thisWeek - lastWeek;
+    const diffText = diff > 0 ? `up ${diff} from last week` : diff < 0 ? `down ${Math.abs(diff)} from last week` : 'matching last week';
+    const insightCard = (eyebrow, value, caption, label) => `
+      <button class="collector-insight-card" onclick='openProfileInsight(${JSON.stringify(label)})'>
+        <span class="collector-insight-eyebrow">${escHtml(eyebrow)}</span>
+        <span class="collector-insight-value">${escHtml(value)}</span>
+        <span class="collector-insight-caption">${escHtml(caption)}</span>
+      </button>
+    `;
+
+    if (!allCards.length) {
+      insightsEl.innerHTML = `
+        <div class="collector-dossier">
+          <div class="collector-dossier-label">Collector identity</div>
+          <div class="collector-dossier-copy">Start claiming songs and HEARD will turn your vault into a living collector profile.</div>
+        </div>
+      `;
+    } else {
+      const dossierCopy = [
+        topGenre ? `Your vault leans ${topGenre[0].toLowerCase()}.` : 'Your vault is taking shape.',
+        topEra ? `${topEra[0]} keeps surfacing.` : 'Era identity will sharpen as you claim more.',
+        topMood ? `${topMood[0]} is the mood showing up most.` : 'Tag a few moods to make the profile feel more personal.'
+      ].join(' ');
+      insightsEl.innerHTML = `
+        <div class="collector-dossier">
+          <div class="collector-dossier-label">Collector identity</div>
+          <div class="collector-dossier-copy">${escHtml(dossierCopy)}</div>
+          <div class="collector-dossier-metrics">
+            <div class="collector-dossier-stat"><strong>${totalCards}</strong><span>cards in vault</span></div>
+            <div class="collector-dossier-stat"><strong>${manualDecks}</strong><span>custom decks</span></div>
+            <div class="collector-dossier-stat"><strong>${favCount}</strong><span>favorite pulls</span></div>
+          </div>
+        </div>
+        <div class="collector-insight-grid">
+          ${insightCard('Vault signal', topGenre ? topGenre[0] : 'building', topGenre ? `${topGenre[1]} cards anchor the collection.` : 'Claim a few cards to reveal your strongest lane.', 'Vault signal')}
+          ${insightCard('Era gravity', topEra ? topEra[0] : 'open', topEra ? `${topEra[1]} cards keep pulling from this era.` : 'Era trends will appear after a few more claims.', 'Era gravity')}
+          ${insightCard('Mood map', topMood ? topMood[0] : 'unset', topMood ? `${topMood[1]} cards are tagged this way.` : 'Tag moods on card backs to unlock this layer.', 'Mood map')}
+          ${insightCard('This week', `${thisWeek} card${thisWeek !== 1 ? 's' : ''}`, diffText, 'Weekly collector rhythm')}
+          ${insightCard('Most revisited', revisitLeader ? revisitLeader.title : 'none yet', revisitLeader ? `${revisitLeader.viewCount || 0} views so far.` : 'Open card detail a few times to reveal your repeat reach.', 'Most revisited')}
+          ${insightCard('Most shared', shareLeader && (shareLeader.sharedCount || 0) > 0 ? shareLeader.title : 'none yet', shareLeader && (shareLeader.sharedCount || 0) > 0 ? `${shareLeader.sharedCount} share${shareLeader.sharedCount !== 1 ? 's' : ''} logged.` : 'Sharing a card or deck will surface here.', 'Most shared')}
+        </div>
+      `;
+    }
+  }
+
+  if (false && insightsEl && allCards.length > 0) {
     let insightsHtml = '';
 
     // Top Genres bar chart
@@ -6570,8 +8015,13 @@ async function renderActivityTimeline() {
       let text = ev.event || '';
       if (ev.event === 'card_creation_completed' && ev.data) text = 'Added "' + (ev.data.title || 'a card') + '"';
       else if (ev.event === 'card_viewed') text = 'Viewed a card';
+      else if (ev.event === 'card_flip') text = 'Flipped a card';
       else if (ev.event === 'card_favorited') text = 'Favorited a card';
       else if (ev.event === 'deck_created' && ev.data) text = 'Created deck "' + (ev.data.name || '') + '"';
+      else if (ev.event === 'deck_completed' && ev.data) text = 'Hit a deck milestone';
+      else if (ev.event === 'profile_insight_opened') text = 'Opened a collector insight';
+      else if (ev.event === 'delight_triggered') text = 'Claimed a card';
+      else if (ev.event === 'milestone_seen' && ev.data) text = 'Reached a vault milestone';
       else if (ev.event === 'preview_play_started') text = 'Previewed a song';
       else if (ev.event === 'search_started' && ev.data) text = 'Searched "' + (ev.data.query || '') + '"';
       else text = text.replace(/_/g, ' ');
@@ -7267,7 +8717,8 @@ class FlipParticleEngine {
         this.ctx.globalAlpha = p.life * p.alpha;
         this.ctx.fillStyle = p.color;
         this.ctx.beginPath();
-        this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        const radius = Math.max(0, p.size * p.life);
+        this.ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         this.ctx.fill();
       }
       this.ctx.globalAlpha = 1;
@@ -7397,6 +8848,8 @@ async function init() {
   // v1.8 init
   loadRecentSearches();
   showSearchSuggestions();
+  showRecentSearches();
+  showSearchBrowse();
   if (settings && settings.viewMode) {
     currentViewMode = settings.viewMode;
     document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === currentViewMode));
@@ -7433,7 +8886,7 @@ init().catch(e => {
       <div class="preview-bar-title" id="previewBarTitle"></div>
       <div class="preview-bar-artist" id="previewBarArtist"></div>
     </div>
-    <button class="preview-bar-add" id="previewBarAdd" onclick="addPreviewedSong()">Collect</button>
+    <button class="preview-bar-add" id="previewBarAdd" onclick="addPreviewedSong()">Claim</button>
     <div class="preview-bar-close" onclick="closePreviewBar()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </div>
