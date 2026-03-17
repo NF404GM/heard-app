@@ -5576,6 +5576,7 @@ async function startOnboarding() {
 
   // Clear completely before rebuilding
   content.innerHTML = '';
+  content.innerHTML = `
     <div class="onboard-progress" id="obProgress">${[0,1,2].map(() => '<div class="onboard-dot"></div>').join('')}</div>
     <div class="onboard-prompt-text" id="obPromptIntro"><span class="gold-underline">Pick 3 songs you'll never forget.</span></div>
   `;
