@@ -4382,6 +4382,7 @@ body.detail-focus-mode #bottom-nav {
 <img src="heard-drive-lockup.png" alt="heard." style="height:150px;width:auto;filter:brightness(0) invert(1);opacity:0.9;">
 </div>
         <div class="profile-handle" id="profileHandle"></div>
+        <div class="profile-collector-id" id="profileCollectorId" style="font-size:var(--text-xs); color:var(--color-gold); font-family:var(--font-mono); margin-bottom:4px; letter-spacing:0.05em; opacity:0.8;"></div>
         <div class="profile-member-since" id="profileMemberSince"></div>
         <button class="settings-gear-btn" onclick="openSettingsModal()" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -4398,10 +4399,18 @@ body.detail-focus-mode #bottom-nav {
 
       <div class="profile-section" id="tradeNetworkSection" style="margin-top:var(--space-6);">
         <div class="profile-section-title">Trade Network</div>
-        <div class="collector-dossier" style="margin-top:0;">
-          <div class="collector-dossier-label">Friends First Trading</div>
-          <div class="collector-dossier-copy">Your trade network is empty. You'll be able to connect with friends to trade duplicate cards and build your decks together.</div>
+        <div id="tradeNetworkContent">
+          <div class="collector-dossier" style="margin-top:0;">
+            <div class="collector-dossier-label">Friends First Trading</div>
+            <div class="collector-dossier-copy">Connect with friends to trade duplicate cards.</div>
+            <div style="margin-top:var(--space-4); display:flex; gap:8px;">
+              <input type="text" id="friendIdInput" placeholder="Friend ID (HD-XXXX)" style="flex:1; background:var(--color-surface-raised); border:1px solid var(--color-border); border-radius:8px; padding:8px 12px; color:var(--color-text-primary); font-size:var(--text-sm);">
+              <button onclick="addFriendById()" style="background:var(--color-gold); color:black; border:none; border-radius:8px; padding:0 16px; font-weight:600; cursor:pointer;">Add</button>
+            </div>
+          </div>
         </div>
+        <div id="activeTradesContent" style="margin-top:var(--space-4);"></div>
+        <div id="friendsListContent" style="margin-top:var(--space-4);"></div>
       </div>
 
       <div class="profile-section" id="mostHeardSection" style="display:none;">
@@ -4720,7 +4729,7 @@ async function confirmCreateDeck() {
 // ── CONSTANTS ──
 const HEARD_SYMBOL_URI = "data:image/png;base64,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";
 const DB_NAME = 'heardDB';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const ITUNES_API = 'https://itunes.apple.com/search';
 const GENRE_PALETTES = {
   'Hip-Hop/Rap': { vibrant: '#D4A04C', darkVibrant: '#8B6914', lightVibrant: '#F0D090', muted: '#A08050', darkMuted: '#604020', lightMuted: '#E8D0A0' },
@@ -4751,6 +4760,8 @@ let currentTab = '__none__';
 let allCards = [];
 let allDecks = [];
 let allWishlist = [];
+let allFriends = [];
+let allTrades = [];
 let settings = null;
 let sessionId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 let currentDetailCard = null;
@@ -4782,7 +4793,7 @@ function uuid() {
 
 // ── Storage Layer (IDB with in-memory fallback) ──
 let useMemory = false;
-const memStore = { cards: {}, decks: {}, settings: {}, events: {}, wishlist: {} };
+const memStore = { cards: {}, decks: {}, settings: {}, events: {}, wishlist: {}, friends: {}, trades: {} };
 let memEventId = 0;
 let storageWarningShown = false;
 
@@ -4862,6 +4873,12 @@ function openDB() {
         }
         if (!db.objectStoreNames.contains('wishlist')) {
           db.createObjectStore('wishlist', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('friends')) {
+          db.createObjectStore('friends', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('trades')) {
+          db.createObjectStore('trades', { keyPath: 'id' });
         }
       };
       req.onsuccess = e => { clearTimeout(timeout); resolve(e.target.result); };
@@ -5003,6 +5020,7 @@ function createSettingsDefaults(overrides = {}) {
   return {
     id: 'user-settings',
     handle: '',
+    collectorId: null, // Generated on first init
     defaultStreamingService: 'spotify',
     firstLaunchAt: new Date().toISOString(),
     onboardingCompleted: false,
@@ -5043,6 +5061,17 @@ async function loadSettings() {
   if (settings.currentStreak > settings.longestStreak) {
     settings.longestStreak = settings.currentStreak;
   }
+  
+  // Phase 3: Identity Migration
+  if (!settings.collectorId) {
+    // Generate a 6-digit alpha-numeric collector ID (e.g., HD-A1B2)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
+    let cid = 'HD-';
+    for (let i = 0; i < 4; i++) cid += chars.charAt(Math.floor(Math.random() * chars.length));
+    settings.collectorId = cid;
+    logEvent('collector_id_generated', { id: cid });
+  }
+
   settings.lastSessionDate = today;
   await dbPut('settings', settings);
 }
@@ -5792,6 +5821,8 @@ async function refreshData() {
   allCards = await dbGetAll('cards');
   allDecks = await dbGetAll('decks');
   allWishlist = await dbGetAll('wishlist');
+  allFriends = await dbGetAll('friends');
+  allTrades = await dbGetAll('trades');
   const dirtyCards = [];
   allCards.forEach(card => {
     if (normalizeCardRecord(card, allCards, allDecks)) dirtyCards.push(card);
@@ -7898,6 +7929,11 @@ function renderProfile() {
     memberSince.textContent = 'Collecting since ' + d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
   }
 
+  const collectorIdEl = document.getElementById('profileCollectorId');
+  if (collectorIdEl) {
+    collectorIdEl.textContent = settings.collectorId || '';
+  }
+
   const handleInput = document.getElementById('handleInput');
   handleInput.value = settings.handle || '';
   handleInput.onchange = async () => {
@@ -8126,6 +8162,63 @@ function renderProfile() {
     }
   }
 
+  // Friends & Trades
+  const friendsListEl = document.getElementById('friendsListContent');
+  if (friendsListEl) {
+    if (allFriends.length > 0) {
+      friendsListEl.innerHTML = `
+        <div class="profile-section-title" style="font-size:var(--text-xs); margin-bottom:8px; opacity:0.6;">Your Circle</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          ${allFriends.map(f => `
+            <div class="collector-dossier" style="margin-top:0; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-weight:600; font-size:var(--text-sm); color:var(--color-gold);">${f.id}</div>
+                <div style="font-size:var(--text-xs); opacity:0.7;">${f.handle || 'Level 1 Collector'}</div>
+              </div>
+              <button onclick="proposeTradeWith('${f.id}')" style="background:var(--color-surface-raised); color:var(--color-text-primary); border:1px solid var(--color-border); border-radius:6px; padding:4px 12px; font-size:var(--text-xs); cursor:pointer;">Trade</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      friendsListEl.innerHTML = '';
+    }
+  }
+
+  const activeTradesEl = document.getElementById('activeTradesContent');
+  if (activeTradesEl) {
+    const pendingTrades = allTrades.filter(t => t.status === 'pending');
+    if (pendingTrades.length > 0) {
+      activeTradesEl.innerHTML = `
+        <div class="profile-section-title" style="font-size:var(--text-xs); margin-bottom:8px; opacity:0.6;">Pending Trades</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          ${pendingTrades.map(t => `
+            <div class="collector-dossier" style="margin-top:0; border:1px solid var(--color-gold); background:rgba(201,168,76,0.05);">
+              <div style="font-size:var(--text-xs); font-weight:600; color:var(--color-gold); margin-bottom:var(--space-2);">INCOMING PROPOSAL</div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <div style="flex:1;">
+                  <div style="font-size:var(--text-xs); opacity:0.7; margin-bottom:2px;">Offer</div>
+                  <div style="font-weight:600; font-size:var(--text-sm);">${escHtml(t.offerTitle)}</div>
+                </div>
+                <div style="font-size:12px; opacity:0.5;">⇄</div>
+                <div style="flex:1;">
+                  <div style="font-size:var(--text-xs); opacity:0.7; margin-bottom:2px;">Claiming</div>
+                  <div style="font-weight:600; font-size:var(--text-sm);">${escHtml(t.requestTitle)}</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:var(--space-3);">
+                <button onclick="respondToTrade('${t.id}', 'accepted')" style="flex:1; background:var(--color-gold); color:black; border:none; border-radius:6px; padding:8px; font-size:var(--text-xs); font-weight:600; cursor:pointer;">Accept</button>
+                <button onclick="respondToTrade('${t.id}', 'declined')" style="flex:1; background:var(--color-surface-raised); color:var(--color-text-primary); border:1px solid var(--color-border); border-radius:6px; padding:8px; font-size:var(--text-xs); cursor:pointer;">Decline</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      activeTradesEl.innerHTML = '';
+    }
+  }
+
   // Top Artists
   const artistCounts = {};
   allCards.forEach(c => { artistCounts[c.artist] = (artistCounts[c.artist] || 0) + 1; });
@@ -8202,6 +8295,98 @@ function openSettingsModal() {
   document.getElementById('settingsModalHandle').value = settings?.handle || '';
   document.getElementById('settingsModalStreaming').value = settings?.defaultStreamingService || 'apple-music';
   overlay.classList.add('show');
+}
+
+// ── Phase 3: Trading Alpha Interaction Logic ──
+
+async function addFriendById() {
+  const input = document.getElementById('friendIdInput');
+  const id = input.value.trim().toUpperCase();
+  if (!id) return;
+  if (id === settings.collectorId) {
+    showToast('You cannot add yourself as a friend.');
+    return;
+  }
+  if (allFriends.find(f => f.id === id)) {
+    showToast('Already in your circle.');
+    return;
+  }
+
+  const newFriend = { id, handle: id === 'HD-SIM1' ? 'AI Collector' : 'New Friend', addedAt: new Date().toISOString() };
+  await dbPut('friends', newFriend);
+  await refreshData();
+  renderProfile();
+  input.value = '';
+  showToast(`Added ${id} to your circle!`);
+
+  // Simulate an incoming trade request from the AI collector
+  if (id === 'HD-SIM1') {
+    setTimeout(() => simulateIncomingTrade(id), 3000);
+  }
+}
+
+async function simulateIncomingTrade(friendId) {
+  if (allCards.length === 0) return;
+  // Pick a random card from the user's collection to "request"
+  const targetCard = allCards[Math.floor(Math.random() * allCards.length)];
+  const trade = {
+    id: uuid(),
+    fromId: friendId,
+    toId: settings.collectorId,
+    offerTitle: 'Random Hits 2024',
+    offerArtist: 'Various Artists',
+    requestCardId: targetCard.id,
+    requestTitle: targetCard.title,
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+  await dbPut('trades', trade);
+  await refreshData();
+  renderProfile();
+  showToast(`New Trade Proposal from ${friendId}!`, 'gold');
+}
+
+async function respondToTrade(tradeId, action) {
+  const trade = allTrades.find(t => t.id === tradeId);
+  if (!trade) return;
+
+  trade.status = action;
+  await dbPut('trades', trade);
+
+  if (action === 'accepted') {
+    // Logic for actual card swap would go here in Phase 3C (Card Ownership)
+    // For now, let's just mock the success Toast
+    showToast('Trade Accepted! Card added to collection.', 'success');
+  } else {
+    showToast('Trade Declined.');
+  }
+
+  await refreshData();
+  renderProfile();
+}
+
+function proposeTradeWith(friendId) {
+  showToast(`Propose Trade logic coming in Phase 3C with ${friendId}`, 'gold');
+}
+
+function showToast(msg, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.position = 'fixed';
+  toast.style.bottom = 'var(--space-20)';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = type === 'success' ? '#4CAF50' : type === 'gold' ? 'var(--color-gold)' : 'var(--color-surface-raised)';
+  toast.style.color = type === 'gold' || type === 'success' ? 'black' : 'white';
+  toast.style.padding = '12px 24px';
+  toast.style.borderRadius = '99px';
+  toast.style.zIndex = '9999';
+  toast.style.fontSize = 'var(--text-sm)';
+  toast.style.fontWeight = '600';
+  toast.style.boxShadow = 'var(--shadow-lg)';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
 }
 function closeSettingsModal() {
   document.getElementById('settingsModalOverlay').classList.remove('show');
