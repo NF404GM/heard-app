@@ -1,23 +1,26 @@
-// HEARD Service Worker v1.8.1
-const CACHE_NAME = 'heard-v1.8.1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+const APP_VERSION = '1.8.1';
+const CACHE_NAME = `heard-v${APP_VERSION}`;
+const ART_CACHE = `heard-artwork-v${APP_VERSION}`;
+const SHELL_PATHS = ['index.html', 'manifest.json'];
+const REMOTE_ASSETS = [
   'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/vibrant.js/1.0.0/Vibrant.min.js'
 ];
 
-const ART_CACHE = 'heard-artwork-v1';
+const getScopeRoot = () => new URL('.', self.registration?.scope || '/').href;
+const toScopeUrl = path => new URL(path, self.registration?.scope || '/').href;
 
 // Install: cache app shell
 self.addEventListener('install', event => {
+  const scopeRoot = getScopeRoot();
+  const shellAssets = SHELL_PATHS.map(toScopeUrl);
+  const staticAssets = [scopeRoot, ...shellAssets, ...REMOTE_ASSETS];
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS).catch(err => {
+      return cache.addAll(staticAssets).catch(err => {
         console.warn('SW: Some assets failed to cache', err);
         // Still activate even if some assets fail
-        return cache.addAll(['/index.html']);
+        return cache.addAll(shellAssets);
       });
     })
   );
@@ -79,7 +82,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => caches.match('/index.html'))
+      }).catch(() => caches.match(toScopeUrl('index.html')))
     );
     return;
   }

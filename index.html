@@ -2395,6 +2395,28 @@ img { display: block; max-width: 100%; }
 }
 .offline-indicator.show { opacity: 1; }
 
+.storage-warning {
+  position: fixed;
+  top: calc(var(--space-2) + 34px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(201, 168, 76, 0.12);
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  color: var(--color-gold);
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  z-index: calc(var(--z-toast) - 1);
+  opacity: 0;
+  transition: opacity var(--dur-small);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.storage-warning.show { opacity: 1; }
+
 /* ═══ FOOTER ═══ */
 .app-footer {
   text-align: center;
@@ -4188,6 +4210,9 @@ body.detail-focus-mode #bottom-nav {
   Offline
 </div>
 
+<!-- Storage warning -->
+<div class="storage-warning" id="storageWarning"></div>
+
 <!-- App Shell -->
 <div id="app">
   <!-- Onboarding -->
@@ -4386,6 +4411,10 @@ body.detail-focus-mode #bottom-nav {
           <div class="profile-list-item" onclick="exportJSON()">
             <span class="label">Export Collection (JSON)</span>
             <span class="value">→</span>
+          </div>
+          <div class="profile-list-item" onclick="triggerCollectionImport()">
+            <span class="label">Import Collection (JSON)</span>
+            <span class="value">↺</span>
           </div>
           <div class="profile-list-item" onclick="exportCSV()">
             <span class="label">Export Activity (CSV)</span>
@@ -4720,12 +4749,23 @@ function uuid() {
 let useMemory = false;
 const memStore = { cards: {}, decks: {}, settings: {}, events: {} };
 let memEventId = 0;
+let storageWarningShown = false;
+
+function notifyStorageFallback(reason) {
+  if (storageWarningShown) return;
+  const warningEl = document.getElementById('storageWarning');
+  if (!warningEl) return;
+  warningEl.textContent = reason;
+  warningEl.classList.add('show');
+  storageWarningShown = true;
+}
 
 function openDB() {
   return new Promise((resolve) => {
     // Timeout: if IDB doesn't respond in 2s, fall back to memory
     const timeout = setTimeout(() => {
       console.warn('IDB timeout, using in-memory storage');
+      notifyStorageFallback('Temp storage active—progress will not survive closing this tab.');
       useMemory = true;
       resolve(null);
     }, 2000);
@@ -4790,18 +4830,21 @@ function openDB() {
       req.onerror = e => {
         clearTimeout(timeout);
         console.warn('IDB error, using in-memory storage');
+        notifyStorageFallback('IDB error—collection data is now temporary.');
         useMemory = true;
         resolve(null);
       };
       req.onblocked = () => {
         clearTimeout(timeout);
         console.warn('IDB blocked, using in-memory storage');
+        notifyStorageFallback('IDB access blocked—data is stored only for this session.');
         useMemory = true;
         resolve(null);
       };
     } catch(e) {
       clearTimeout(timeout);
       console.warn('IDB unavailable, using in-memory storage');
+      notifyStorageFallback('IndexedDB unavailable—collection will not persist.');
       useMemory = true;
       resolve(null);
     }
@@ -4858,6 +4901,44 @@ function dbClear(store) {
   });
 }
 
+const DATA_STORE_NAMES = ['cards', 'decks', 'events', 'settings'];
+
+function resetMemoryStores() {
+  DATA_STORE_NAMES.forEach(store => { memStore[store] = {}; });
+  memEventId = 0;
+}
+
+async function replacePersistedSnapshot({ cards = [], decks = [], settingsRecord = null, events = [] } = {}) {
+  if (useMemory || !db) {
+    resetMemoryStores();
+    cards.forEach(card => { if (card?.id) memStore.cards[card.id] = card; });
+    decks.forEach(deck => { if (deck?.id) memStore.decks[deck.id] = deck; });
+    if (settingsRecord?.id) memStore.settings[settingsRecord.id] = settingsRecord;
+    events.forEach(event => {
+      const eventId = event?.id || `mem-${++memEventId}`;
+      memStore.events[eventId] = { ...event, id: eventId };
+    });
+    return;
+  }
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(DATA_STORE_NAMES, 'readwrite');
+    const cardsStore = tx.objectStore('cards');
+    const decksStore = tx.objectStore('decks');
+    const eventsStore = tx.objectStore('events');
+    const settingsStore = tx.objectStore('settings');
+    tx.oncomplete = () => resolve();
+    tx.onabort = tx.onerror = e => reject(tx.error || e.target?.error || new Error('Snapshot update failed'));
+    cardsStore.clear();
+    decksStore.clear();
+    eventsStore.clear();
+    settingsStore.clear();
+    cards.forEach(card => cardsStore.put(card));
+    decks.forEach(deck => decksStore.put(deck));
+    if (settingsRecord) settingsStore.put(settingsRecord);
+    events.forEach(event => eventsStore.put(event));
+  });
+}
+
 // ── EVENT LOGGING ──
 function logEvent(name, data = {}) {
   try {
@@ -4880,25 +4961,31 @@ function logEvent(name, data = {}) {
 }
 
 // ── SETTINGS ──
+function createSettingsDefaults(overrides = {}) {
+  return {
+    id: 'user-settings',
+    handle: '',
+    defaultStreamingService: 'spotify',
+    firstLaunchAt: new Date().toISOString(),
+    onboardingCompleted: false,
+    onboardingSkipped: false,
+    totalSessions: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    lastSessionDate: null,
+    installSource: window.matchMedia('(display-mode: standalone)').matches ? 'home-screen' : 'browser',
+    deviceType: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop',
+    installPromptShownAt: null,
+    installPromptDismissed: false,
+    ...overrides,
+    id: 'user-settings'
+  };
+}
+
 async function loadSettings() {
   settings = await dbGet('settings', 'user-settings');
   if (!settings) {
-    settings = {
-      id: 'user-settings',
-      handle: '',
-      defaultStreamingService: 'spotify',
-      firstLaunchAt: new Date().toISOString(),
-      onboardingCompleted: false,
-      onboardingSkipped: false,
-      totalSessions: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      lastSessionDate: null,
-      installSource: window.matchMedia('(display-mode: standalone)').matches ? 'home-screen' : 'browser',
-      deviceType: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop',
-      installPromptShownAt: null,
-      installPromptDismissed: false
-    };
+    settings = createSettingsDefaults();
     await dbPut('settings', settings);
   }
   // Update session
@@ -7471,36 +7558,6 @@ function renderDecks() {
     const cards = deck.isSmart ? getSmartDeckCards(deck) : deck.cardIds.map(id => allCards.find(c => c.id === id)).filter(Boolean);
     return renderDeckStackCard(deck, cards);
   }).join('') + emptyState;
-  return;
-
-  list.innerHTML = sorted.map(d => {
-    const isS = d.isSmart;
-    const cards = isS ? getSmartDeckCards(d) : d.cardIds.map(id => allCards.find(c => c.id === id)).filter(Boolean);
-    const coverCards = isS ? cards.slice(0, 16) : d.cardIds.slice(0, 16).map(id => allCards.find(c => c.id === id)).filter(Boolean);
-    return `
-      <div class="deck-card" onclick="openDeckView('${d.id}')">
-        <div class="deck-cover">
-          <canvas class="deck-mosaic-canvas" data-deck-id="${d.id}" width="200" height="200" style="width:100%;height:100%;border-radius:12px;"></canvas>
-        </div>
-        <div class="deck-info">
-          <div class="name">${escHtml(d.name)}</div>
-          <div class="meta">${cards.length} card${cards.length !== 1 ? 's' : ''}${!isS ? ' · ' + timeAgo(d.updatedAt) : ''}</div>
-        </div>
-        ${isS ? '<span class="deck-smart-badge">Smart</span>' : ''}
-      </div>
-    `;
-  }).join('') + emptyState;
-
-  // Render deck mosaic covers asynchronously
-  sorted.forEach(d => {
-    const isS = d.isSmart;
-    const cards = isS ? getSmartDeckCards(d) : d.cardIds.map(id => allCards.find(c => c.id === id)).filter(Boolean);
-    const coverCards = cards.slice(0, 16);
-    const canvas = list.querySelector(`canvas[data-deck-id="${d.id}"]`);
-    if (canvas && coverCards.length > 0) {
-      DeckMosaic.render(canvas, coverCards).catch(() => {});
-    }
-  });
 }
 
 function openDeckView(deckId) {
@@ -7949,7 +8006,6 @@ function renderProfile() {
 
     insightsEl.innerHTML = insightsHtml;
   }
-
   // Most Heard (top 3)
   const topHeard = [...allCards].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 3).filter(c => c.viewCount > 0);
   const mostHeardSection = document.getElementById('mostHeardSection');
@@ -8043,7 +8099,7 @@ function toggleSettings() {
 function openSettingsModal() {
   const overlay = document.getElementById('settingsModalOverlay');
   document.getElementById('settingsModalHandle').value = settings?.handle || '';
-  document.getElementById('settingsModalStreaming').value = settings?.defaultStreaming || 'apple-music';
+  document.getElementById('settingsModalStreaming').value = settings?.defaultStreamingService || 'apple-music';
   overlay.classList.add('show');
 }
 function closeSettingsModal() {
@@ -8053,7 +8109,7 @@ function saveSettingsFromModal() {
   const handle = document.getElementById('settingsModalHandle').value.trim();
   const streaming = document.getElementById('settingsModalStreaming').value;
   settings.handle = handle;
-  settings.defaultStreaming = streaming;
+  settings.defaultStreamingService = streaming;
   dbPut('settings', settings);
   // Sync to existing settings UI
   const hi = document.getElementById('handleInput');
@@ -8092,6 +8148,87 @@ function downloadBlob(blob, name) {
   URL.revokeObjectURL(a.href);
 }
 
+function triggerCollectionImport(closeSettingsOnComplete = false) {
+  const input = document.getElementById('collectionImportInput');
+  if (!input) return;
+  input.value = '';
+  input.dataset.closeSettings = closeSettingsOnComplete ? '1' : '';
+  input.click();
+}
+
+async function handleImportJsonFile(event) {
+  const file = event.target?.files?.[0];
+  if (!file) return;
+  const closeSettingsOnComplete = event.target.dataset.closeSettings === '1';
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    await importCollectionFromJSON(payload, closeSettingsOnComplete);
+  } catch (err) {
+    console.warn('Import failed', err);
+    showToast('Import failed', true);
+  } finally {
+    event.target.value = '';
+    delete event.target.dataset.closeSettings;
+  }
+}
+
+async function importCollectionFromJSON(payload, closeSettingsOnComplete) {
+  if (!payload || !Array.isArray(payload.cards) || !Array.isArray(payload.decks)) {
+    showToast('Import file missing cards or decks', true);
+    return;
+  }
+  const confirmed = await showConfirmDialog(
+    'Import Collection',
+    'This will replace your collection, decks, and settings. This cannot be undone.',
+    'Import',
+    'Cancel'
+  );
+  if (confirmed !== 'confirm') return;
+  try {
+    const importedDecks = payload.decks.map(deck => ({
+      ...deck,
+      id: deck.id || uuid(),
+      cardIds: Array.isArray(deck.cardIds) ? [...deck.cardIds] : [],
+      milestonesSeen: Array.isArray(deck.milestonesSeen) ? [...deck.milestonesSeen] : []
+    }));
+    const importedCards = payload.cards.map(card => {
+      const normalized = { ...card };
+      if (!normalized.id) normalized.id = uuid();
+      return normalized;
+    });
+    importedCards.forEach(card => normalizeCardRecord(card, importedCards, importedDecks));
+    const importedCardIds = new Set(importedCards.map(card => card.id));
+    importedDecks.forEach(deck => {
+      deck.cardIds = deck.cardIds.filter(cardId => importedCardIds.has(cardId));
+    });
+    const importedSettings = createSettingsDefaults({
+      ...(payload.settings || {}),
+      defaultStreamingService: payload.settings?.defaultStreamingService || payload.settings?.defaultStreaming || 'spotify',
+      onboardingCompleted: importedCards.length > 0 || importedDecks.length > 0 ? true : Boolean(payload.settings?.onboardingCompleted),
+      onboardingSkipped: false
+    });
+    await replacePersistedSnapshot({
+      cards: importedCards,
+      decks: importedDecks,
+      settingsRecord: importedSettings,
+      events: Array.isArray(payload.events) ? payload.events : []
+    });
+    settings = importedSettings;
+    await ensureSmartDecks();
+    await refreshData();
+    if (closeSettingsOnComplete) closeSettingsModal();
+    document.getElementById('onboarding').classList.add('hidden');
+    document.getElementById('bottom-nav').classList.add('visible');
+    switchTab('collection');
+    logEvent('collection_imported', { cardCount: importedCards.length, deckCount: importedDecks.length });
+    showToast('Collection restored');
+  } catch (err) {
+    console.warn('Import failed', err);
+    showToast('Import failed', true);
+  }
+}
+
 async function clearAllData() {
   const confirmed = await showConfirmDialog(
     'Clear All Data',
@@ -8099,23 +8236,33 @@ async function clearAllData() {
     'Delete Everything',
     'Cancel'
   );
-  if (confirmed === 'confirm') {
-    await dbClear('cards');
-    await dbClear('decks');
-    await dbClear('events');
-    await dbClear('settings');
-    settings = null;
-    allCards = [];
-    allDecks = [];
-    await loadSettings();
-    await ensureSmartDecks();
-    await refreshData();
-    document.getElementById('onboarding').classList.remove('hidden');
-    document.getElementById('onboarding').style.opacity = '1';
-    document.getElementById('bottom-nav').classList.remove('visible');
-    startOnboarding();
-    showToast('All data cleared');
+  if (confirmed !== 'confirm') return;
+  const finalConfirmed = await showConfirmDialog(
+    'Final Confirmation',
+    'Export a JSON backup first if you might want this collection again. Delete everything on this device now?',
+    'Yes, Delete It',
+    'Go Back'
+  );
+  if (finalConfirmed !== 'confirm') return;
+  try {
+    await replacePersistedSnapshot();
+  } catch (err) {
+    console.warn('clearAllData failed', err);
+    showToast('Could not clear all data', true);
+    return;
   }
+  settings = null;
+  allCards = [];
+  allDecks = [];
+  closeSettingsModal();
+  await loadSettings();
+  await ensureSmartDecks();
+  await refreshData();
+  document.getElementById('onboarding').classList.remove('hidden');
+  document.getElementById('onboarding').style.opacity = '1';
+  document.getElementById('bottom-nav').classList.remove('visible');
+  startOnboarding();
+  showToast('All data cleared');
 }
 
 // ── CONFIRM DIALOG ──
@@ -8921,11 +9068,15 @@ init().catch(e => {
     </div>
     <div class="settings-modal-item" onclick="exportJSON(); closeSettingsModal();">
       <span class="label">Export Collection (JSON)</span>
-      <span style="color:var(--color-text-tertiary);">&rarr;</span>
+      <span style="color:var(--color-text-tertiary);">→</span>
+    </div>
+    <div class="settings-modal-item" onclick="triggerCollectionImport(true)">
+      <span class="label">Import Collection (JSON)</span>
+      <span style="color:var(--color-text-tertiary);">↺</span>
     </div>
     <div class="settings-modal-item" onclick="exportCSV(); closeSettingsModal();">
       <span class="label">Export Activity (CSV)</span>
-      <span style="color:var(--color-text-tertiary);">&rarr;</span>
+      <span style="color:var(--color-text-tertiary);">→</span>
     </div>
     <div class="settings-modal-item destructive" onclick="clearAllData()">
       <span class="label">Clear All Data</span>
@@ -8959,6 +9110,6 @@ init().catch(e => {
     </div>
   </div>
 </div>
-
+<input type="file" id="collectionImportInput" accept="application/json" style="display:none" onchange="handleImportJsonFile(event)">
 </body>
 </html>
