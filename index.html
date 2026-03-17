@@ -659,6 +659,7 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   gap: 0;
+  transition: transform var(--dur-medium) var(--ease-spring), opacity var(--dur-medium) var(--ease-standard);
 }
 .collection-header .collection-top-row { margin-bottom: 12px; }
 .collection-header .collection-search-wrap { margin-bottom: 8px; }
@@ -712,6 +713,7 @@ img { display: block; max-width: 100%; }
   scrollbar-width: none;
   scroll-snap-type: x proximity;
   scroll-padding-inline: var(--space-3);
+  transition: transform var(--dur-medium) var(--ease-spring), opacity var(--dur-medium) var(--ease-standard);
 }
 .collection-controls::-webkit-scrollbar { display: none; }
 .collection-controls > * { scroll-snap-align: start; }
@@ -3264,6 +3266,27 @@ img { display: block; max-width: 100%; }
 }
 
 /* ═══ VISUAL ENGINE: CARD FRAMES ═══ */
+[data-frame-material="archival-paper"]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+  opacity: 0.04; mix-blend-mode: multiply; z-index: 10;
+}
+[data-frame-material="metallic-foil"]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.05) 100%);
+  mix-blend-mode: overlay; z-index: 10;
+}
+[data-frame-material="lacquer-gloss"]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.4) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15); z-index: 10;
+}
+[data-frame-material="grain-carbon"]::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+  z-index: 10;
+}
+
 [data-frame-tier="0"] {
   border: 2px solid var(--frame-dominant, var(--color-gold));
 }
@@ -4704,10 +4727,8 @@ const DEFAULT_PALETTE = {
   muted: '#bcc1c2', darkMuted: '#2C2C30', lightMuted: '#f1edf1'
 };
 const ONBOARDING_PROMPTS = [
-  'A song from high school',
-  'A song from a road trip',
-  'A song that changed everything',
-  'A guilty pleasure',
+  'A song from a core memory',
+  'A song that feels like summer',
   'The one you\'d play right now'
 ];
 
@@ -5555,9 +5576,8 @@ async function startOnboarding() {
 
   // Clear completely before rebuilding
   content.innerHTML = '';
-  content.innerHTML = `
-    <div class="onboard-progress" id="obProgress">${[0,1,2,3,4].map(() => '<div class="onboard-dot"></div>').join('')}</div>
-    <div class="onboard-prompt-text" id="obPromptIntro"><span class="gold-underline">Pick 5 songs you'll never forget.</span></div>
+    <div class="onboard-progress" id="obProgress">${[0,1,2].map(() => '<div class="onboard-dot"></div>').join('')}</div>
+    <div class="onboard-prompt-text" id="obPromptIntro"><span class="gold-underline">Pick 3 songs you'll never forget.</span></div>
   `;
   content.style.opacity = '1';
   await sleep(100);
@@ -5566,7 +5586,7 @@ async function startOnboarding() {
 
   // Step 4: Guided prompts
   const pickedCards = [];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     logEvent('onboarding_prompt_shown', { promptIndex: i, promptText: ONBOARDING_PROMPTS[i] });
     const startTime = Date.now();
 
@@ -5581,7 +5601,7 @@ async function startOnboarding() {
     content.style.transform = 'translateY(20px)';
 
     // Build progress dots HTML
-    const dotsHtml = [0,1,2,3,4].map(idx => {
+    const dotsHtml = [0,1,2].map(idx => {
       let cls = 'onboard-dot';
       if (idx < i) cls += ' done';
       else if (idx === i) cls += ' active';
@@ -5677,7 +5697,7 @@ async function startOnboarding() {
   content.innerHTML = '';
   content.style.transform = '';
 
-  const fanAngles = [-12, -6, 0, 6, 12];
+  const fanAngles = [-10, 0, 10];
   content.innerHTML = `
     <div class="onboard-gold-flash" id="obGoldFlash"></div>
     <div class="onboard-stack" id="obFinalStack" style="gap:0;align-items:center;">
@@ -5687,7 +5707,7 @@ async function startOnboarding() {
         </div>
       `).join('')}
     </div>
-    <div class="onboard-final-text" id="obFinalText">5 songs. 5 memories. your collection starts now.</div>
+    <div class="onboard-final-text" id="obFinalText">3 songs. 3 memories. your collection starts now.</div>
   `;
   content.style.opacity = '1';
   // Gold flash pulse at the peak moment
@@ -5701,7 +5721,7 @@ async function startOnboarding() {
   await dbPut('decks', {
     id: deckId,
     name: 'My First Deck',
-    description: 'The 5 songs you\'ll never forget',
+    description: 'The 3 songs you\'ll never forget',
     cardIds: pickedCards.map(c => c.id),
     coverType: 'mosaic',
     coverCardId: null,
@@ -5716,8 +5736,9 @@ async function startOnboarding() {
   await sleep(3000);
 
   settings.onboardingCompleted = true;
+  settings.onboardingVersion = 2;
   await saveSettings();
-  logEvent('onboarding_completed', { totalTimeMs: Date.now(), cardsCreated: 5 });
+  logEvent('onboarding_completed', { totalTimeMs: Date.now(), cardsCreated: 3 });
 
   // Transition out
   document.getElementById('onboarding').style.transition = 'opacity 600ms ease';
@@ -5761,19 +5782,20 @@ function getCardFrameStyle(card) {
   const palette = card?.palette || {};
   return {
     tier: visualEngine.getEffectiveFrameTier(card),
+    material: visualEngine.getEffectiveFrameMaterial(card),
     dominant: palette.dominant || palette.vibrant || 'var(--color-gold)',
     accent: palette.accent || palette.lightVibrant || 'var(--color-gold)'
   };
 }
 
 function buildCardFrameAttrs(card, extraStyle = '') {
-  const { tier, dominant, accent } = getCardFrameStyle(card);
+  const { tier, material, dominant, accent } = getCardFrameStyle(card);
   const styles = [
     extraStyle,
     `--frame-dominant:${dominant}`,
     `--frame-accent:${accent}`
   ].filter(Boolean).join('; ');
-  return `data-frame-tier="${tier}" style="${styles}"`;
+  return `data-frame-tier="${tier}" data-frame-material="${material}" style="${styles}"`;
 }
 
 function renderCardToplineHTML(card, extraClass = '') {
@@ -5891,7 +5913,16 @@ function renderNextBatch() {
   }
 }
 
+function withViewTransition(cb) {
+  if (!document.startViewTransition || (typeof visualEngine !== 'undefined' && visualEngine.motionReduced)) {
+    cb();
+    return;
+  }
+  document.startViewTransition(cb);
+}
+
 function renderCollection() {
+  withViewTransition(() => {
   const cards = getFilteredSortedCards();
   const grid = document.getElementById('cardGrid');
   const listEl = document.getElementById('cardList');
@@ -5960,6 +5991,7 @@ function renderCollection() {
     }, { root: document.getElementById('content-area'), rootMargin: '200px' });
     renderNextBatch();
   }
+  });
 }
 
 
@@ -8697,10 +8729,24 @@ function getFrameTier(card) {
   return 0;
 }
 
+function getFrameMaterial(card) {
+  const genre = (card.genre || '').toLowerCase();
+  if (genre.includes('electronic') || genre.includes('dance') || genre.includes('techno') || genre.includes('house')) {
+    return 'metallic-foil';
+  } else if (genre.includes('rock') || genre.includes('metal') || genre.includes('punk') || genre.includes('alternative')) {
+    return 'grain-carbon';
+  } else if (genre.includes('pop') || genre.includes('r&b') || genre.includes('hip-hop') || genre.includes('rap')) {
+    return 'lacquer-gloss';
+  }
+  return 'archival-paper';
+}
+
 function applyFrameToElement(el, card) {
   const tier = visualEngine.getEffectiveFrameTier(card);
+  const material = visualEngine.getEffectiveFrameMaterial(card);
   const palette = card.palette || {};
   el.setAttribute('data-frame-tier', tier);
+  el.setAttribute('data-frame-material', material);
   el.style.setProperty('--frame-dominant', palette.dominant || palette.vibrant || 'var(--color-gold)');
   el.style.setProperty('--frame-accent', palette.accent || palette.lightVibrant || 'var(--color-gold)');
 }
@@ -8960,6 +9006,10 @@ const visualEngine = {
   getEffectiveFrameTier(card) {
     if (!this.shouldAnimate()) return 0;
     return getFrameTier(card);
+  },
+
+  getEffectiveFrameMaterial(card) {
+    return getFrameMaterial(card);
   }
 };
 
