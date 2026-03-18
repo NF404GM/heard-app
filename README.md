@@ -25,16 +25,25 @@ A dark-mode-only, single-file music collection app. Search for songs, collect th
 
 ## Tech Stack
 
-- Single HTML file (~194 KB, ~58 KB gzipped)
+- Single HTML file (~361 KB, ~96 KB gzipped)
 - Vanilla JS — no frameworks, no build tools
 - CSS custom properties for theming
 - iTunes Search API for song data
 - Vibrant.js for color extraction
-- Local storage for persistence
+- IndexedDB-backed persistence (with an in-memory fallback) plus service-worker caching
 
 ## Running Locally
 
-Just open `index.html` in any browser. No server required.
+The UI is static, but the service worker, install prompt, and most offline behavior still need a local server. From the repo root you can run `python -m http.server 4173` or `npx serve . --listen 4173`, then open `http://localhost:4173` to exercise PWA/offline flows, playlist sharing, and IndexedDB persistence on the same origin you would use in production-like testing.
+
+If you're serving the app from another static host or a subpath, verify install/offline behavior from that final URL so the manifest scope and service-worker cache entries match the deployed origin.
+
+## Contributor checklist
+
+1. Confirm the visible version string in the footer, the settings modal, and any README labels all match the version you are about to ship.
+2. Update the service worker cache name/comment, the manifest metadata, and the IndexedDB schema version together so upgrades hit everywhere at once.
+3. Run the app from `localhost` or another HTTPS origin, then test search ➜ claim, collection persistence, exports/imports (JSON + CSV), and shared-deck URLs while online and offline.
+4. Verify the export/clear/data paths still line up with the README guidance and shareable URLs; flag any offline-only assumptions before merging.
 
 ## Version
 
