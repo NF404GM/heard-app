@@ -4223,6 +4223,74 @@ body.detail-focus-mode #bottom-nav {
   border: 1px solid rgba(201,168,76,0.22);
 }
 
+  /* Trade Overlay */
+  .trade-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
+    z-index: 10000; opacity: 0; pointer-events: none;
+    transition: opacity 0.4s var(--ease-out);
+    display: flex; align-items: flex-end;
+  }
+  .trade-overlay.show { opacity: 1; pointer-events: auto; }
+  .trade-sheet {
+    width: 100%; max-height: 90vh; background: var(--color-surface-base);
+    border-top-left-radius: 24px; border-top-right-radius: 24px;
+    padding: var(--space-6); transform: translateY(100%);
+    transition: transform 0.4s var(--ease-out);
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .trade-overlay.show .trade-sheet { transform: translateY(0); }
+  .trade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); }
+  .trade-title { font-size: var(--text-lg); font-weight: 700; color: var(--color-gold); letter-spacing: -0.02em; }
+  .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-8); }
+  .trade-column-title { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; margin-bottom: var(--space-2); }
+  .trade-track-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+  .trade-track-item {
+    display: flex; gap: 12px; align-items: center; padding: 8px;
+    background: var(--color-surface-raised); border: 1px solid var(--color-border);
+    border-radius: 12px; cursor: pointer; transition: all 0.2s ease; position: relative;
+  }
+  .trade-track-item:hover { border-color: var(--color-gold); }
+  .trade-track-item.selected { border-color: var(--color-gold); background: rgba(201,168,76,0.1); box-shadow: 0 0 15px rgba(201,168,76,0.1); }
+  .trade-track-item img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; }
+  .trade-track-item .info { flex: 1; min-width: 0; }
+  .trade-track-item .title { font-size: var(--text-xs); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trade-track-item .artist { font-size: 10px; opacity: 0.7; }
+  .trade-track-item .dup-badge { position: absolute; top: 4px; right: 4px; font-size: 8px; font-weight: 800; background: var(--color-gold); color: black; padding: 2px 4px; border-radius: 4px; line-height: 1; }
+  .trade-footer { display: flex; flex-direction: column; gap: 12px; }
+  .send-trade-btn {
+    width: 100%; padding: 16px; background: var(--color-gold); color: black;
+    border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .send-trade-btn:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+  .trade-close-btn { background: none; border: none; color: white; cursor: pointer; padding: 4px; }
+  @media (max-width: 600px) { .trade-grid { grid-template-columns: 1fr; } }
+  /* Community Feed */
+  .community-feed-list { display: flex; flex-direction: column; gap: 12px; }
+  .feed-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px; background: var(--color-surface-raised);
+    border: 1px solid var(--color-border); border-radius: 12px;
+    animation: fadeIn 0.5s ease backwards;
+  }
+  .feed-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--color-gold); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: black;
+  }
+  .feed-content { flex: 1; min-width: 0; }
+  .feed-user { font-weight: 700; font-size: 12px; color: var(--color-gold); margin-bottom: 2px; }
+  .feed-copy { font-size: 12px; line-height: 1.4; color: var(--color-text-primary); }
+  .feed-meta { font-size: 10px; opacity: 0.5; margin-top: 4px; }
+  .feed-track-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,0.05); padding: 2px 6px;
+    border-radius: 4px; margin-top: 4px;
+  }
+  .feed-track-chip img { width: 16px; height: 16px; border-radius: 2px; }
+  .feed-track-chip span { font-size: 10px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -4331,6 +4399,11 @@ body.detail-focus-mode #bottom-nav {
           <div class="search-browse-copy">start with a memory, an artist, or a feeling. every result should feel collectible before you save it.</div>
         </div>
         <div class="search-trending" id="searchTrending"></div>
+
+        <div class="community-feed-section" id="communityFeedSection" style="margin-top:var(--space-8);">
+          <div class="search-editorial-label" style="font-size:10px; opacity:0.5; margin-bottom:var(--space-2);">community signal</div>
+          <div class="community-feed-list" id="communityFeedList"></div>
+        </div>
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="search-empty" id="searchEmpty" style="display:none;">
@@ -4382,7 +4455,8 @@ body.detail-focus-mode #bottom-nav {
 <img src="heard-drive-lockup.png" alt="heard." style="height:150px;width:auto;filter:brightness(0) invert(1);opacity:0.9;">
 </div>
         <div class="profile-handle" id="profileHandle"></div>
-        <div class="profile-collector-id" id="profileCollectorId" style="font-size:var(--text-xs); color:var(--color-gold); font-family:var(--font-mono); margin-bottom:4px; letter-spacing:0.05em; opacity:0.8;"></div>
+        <div id="profileBio" style="font-size:var(--text-xs); opacity:0.6; margin-top:2px; font-style:italic; max-width:240px; margin-left:auto; margin-right:auto;"></div>
+        <div class="profile-collector-id" id="profileCollectorId" style="font-size:var(--text-xs); color:var(--color-gold); font-family:var(--font-mono); margin-top:6px; margin-bottom:4px; letter-spacing:0.05em; opacity:0.8;"></div>
         <div class="profile-member-since" id="profileMemberSince"></div>
         <button class="settings-gear-btn" onclick="openSettingsModal()" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -5020,6 +5094,7 @@ function createSettingsDefaults(overrides = {}) {
   return {
     id: 'user-settings',
     handle: '',
+    bio: '',
     collectorId: null, // Generated on first init
     defaultStreamingService: 'spotify',
     firstLaunchAt: new Date().toISOString(),
@@ -5522,6 +5597,7 @@ function switchTab(tab, force = false) {
   else if (tab === 'decks') { closeDeckView(); renderDecks(); }
   else if (tab === 'profile') renderProfile();
   else if (tab === 'search') {
+    renderCommunityFeed();
     if (!navigator.onLine) {
       document.getElementById('searchOffline').style.display = 'block';
       document.getElementById('searchEmpty').style.display = 'none';
@@ -6644,6 +6720,7 @@ async function animateCardCreation(track) {
   const card = await createCard(track);
   await refreshData();
   logEvent('delight_triggered', { type: 'card_claimed', cardId: card.id });
+  logCommunityEvent(`just claimed ${track.trackName}!`, { track: track.trackName, trackCover: track.artworkUrl100 });
   const collectorMilestone = getCollectorMilestone(allCards.length);
   if (collectorMilestone) {
     logEvent('milestone_seen', { type: 'vault_cards', milestone: collectorMilestone, cardId: card.id });
@@ -7934,22 +8011,39 @@ function renderProfile() {
     collectorIdEl.textContent = settings.collectorId || '';
   }
 
+  const bioDisplay = document.getElementById('profileBio');
+  if (bioDisplay) bioDisplay.textContent = settings.bio || '';
+
   const handleInput = document.getElementById('handleInput');
-  handleInput.value = settings.handle || '';
-  handleInput.onchange = async () => {
-    settings.handle = handleInput.value.trim();
-    await saveSettings();
-    logEvent('settings_changed', { setting: 'handle', value: settings.handle });
-    handle.textContent = settings.handle ? `@${settings.handle}` : '';
-  };
+  if (handleInput) {
+    handleInput.value = settings.handle || '';
+    handleInput.onchange = async () => {
+      settings.handle = handleInput.value.trim();
+      await saveSettings();
+      logEvent('settings_changed', { setting: 'handle', value: settings.handle });
+      if (handle) handle.textContent = settings.handle ? `@${settings.handle}` : '';
+    };
+  }
+
+  const bioInput = document.getElementById('profileBioInput'); 
+  if (bioInput) {
+    bioInput.value = settings.bio || '';
+    bioInput.onchange = async () => {
+      settings.bio = bioInput.value.trim();
+      await saveSettings();
+      if (bioDisplay) bioDisplay.textContent = settings.bio;
+    };
+  }
 
   const streamingSelect = document.getElementById('streamingSelect');
-  streamingSelect.value = settings.defaultStreamingService || 'spotify';
-  streamingSelect.onchange = async () => {
-    settings.defaultStreamingService = streamingSelect.value;
-    await saveSettings();
-    logEvent('settings_changed', { setting: 'defaultStreamingService', value: streamingSelect.value });
-  };
+  if (streamingSelect) {
+    streamingSelect.value = settings.defaultStreamingService || 'spotify';
+    streamingSelect.onchange = async () => {
+      settings.defaultStreamingService = streamingSelect.value;
+      await saveSettings();
+      logEvent('settings_changed', { setting: 'defaultStreamingService', value: streamingSelect.value });
+    };
+  }
 
   // Stats
   const totalCards = allCards.length;
@@ -7957,299 +8051,120 @@ function renderProfile() {
   const totalListenMs = allCards.reduce((s, c) => s + (c.previewListenMs || 0), 0);
   const listenStr = totalListenMs >= 3600000 ? Math.floor(totalListenMs/3600000) + 'h ' + Math.floor((totalListenMs%3600000)/60000) + 'm' : Math.floor(totalListenMs/60000) + 'm';
   const favCount = allCards.filter(c => c.isFavorite).length;
-  const tagSet = new Set();
-  allCards.forEach(c => (c.tags||[]).forEach(t => tagSet.add(t)));
 
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card highlight">
-      <div class="stat-value">${totalCards}</div>
-      <div class="stat-label">Cards</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${manualDecks}</div>
-      <div class="stat-label">Decks</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${listenStr}</div>
-      <div class="stat-label">Listening</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${settings.currentStreak || 0}d</div>
-      <div class="stat-label">Streak ${(settings.currentStreak || 0) > 0 ? '🔥' : ''}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${favCount}</div>
-      <div class="stat-label">Favorites</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${tagSet.size}</div>
-      <div class="stat-label">Tags</div>
-    </div>
-  `;
-
-  const genreCounts = {};
-  const decadeCounts = {};
-  const moodCounts = {};
-  allCards.forEach(card => {
-    if (card.genre) genreCounts[card.genre] = (genreCounts[card.genre] || 0) + 1;
-    if (card.era) decadeCounts[card.era] = (decadeCounts[card.era] || 0) + 1;
-    if (card.mood) moodCounts[card.mood] = (moodCounts[card.mood] || 0) + 1;
-  });
-
-  // Collection Insights
-  const insightsEl = document.getElementById('profileInsights');
-  if (insightsEl) {
-    const topGenre = Object.entries(genreCounts).sort((a, b) => b[1] - a[1])[0];
-    const topEra = Object.entries(decadeCounts).sort((a, b) => b[1] - a[1])[0];
-    const topMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0];
-    const revisitLeader = [...allCards].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))[0];
-    const shareLeader = [...allCards].sort((a, b) => (b.sharedCount || 0) - (a.sharedCount || 0))[0];
-    const now = new Date();
-    const weekAgo = new Date(now - 7 * 86400000);
-    const twoWeekAgo = new Date(now - 14 * 86400000);
-    const thisWeek = allCards.filter(c => new Date(c.createdAt) >= weekAgo).length;
-    const lastWeek = allCards.filter(c => { const d = new Date(c.createdAt); return d >= twoWeekAgo && d < weekAgo; }).length;
-    const diff = thisWeek - lastWeek;
-    const diffText = diff > 0 ? `up ${diff} from last week` : diff < 0 ? `down ${Math.abs(diff)} from last week` : 'matching last week';
-    const insightCard = (eyebrow, value, caption, label) => `
-      <button class="collector-insight-card" onclick='openProfileInsight(${JSON.stringify(label)})'>
-        <span class="collector-insight-eyebrow">${escHtml(eyebrow)}</span>
-        <span class="collector-insight-value">${escHtml(value)}</span>
-        <span class="collector-insight-caption">${escHtml(caption)}</span>
-      </button>
-    `;
-
-    if (!allCards.length) {
-      insightsEl.innerHTML = `
-        <div class="collector-dossier">
-          <div class="collector-dossier-label">Collector identity</div>
-          <div class="collector-dossier-copy">Start claiming songs and HEARD will turn your vault into a living collector profile.</div>
-        </div>
-      `;
-    } else {
-      const dossierCopy = [
-        topGenre ? `Your vault leans ${topGenre[0].toLowerCase()}.` : 'Your vault is taking shape.',
-        topEra ? `${topEra[0]} keeps surfacing.` : 'Era identity will sharpen as you claim more.',
-        topMood ? `${topMood[0]} is the mood showing up most.` : 'Tag a few moods to make the profile feel more personal.'
-      ].join(' ');
-      insightsEl.innerHTML = `
-        <div class="collector-dossier">
-          <div class="collector-dossier-label">Collector identity</div>
-          <div class="collector-dossier-copy">${escHtml(dossierCopy)}</div>
-          <div class="collector-dossier-metrics">
-            <div class="collector-dossier-stat"><strong>${totalCards}</strong><span>cards in vault</span></div>
-            <div class="collector-dossier-stat"><strong>${manualDecks}</strong><span>custom decks</span></div>
-            <div class="collector-dossier-stat"><strong>${favCount}</strong><span>favorite pulls</span></div>
-          </div>
-        </div>
-        <div class="profile-section-title" style="margin-top:var(--space-6);">Badge Case</div>
-        <div class="badge-case-grid" style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-6);">
-          ${typeof renderBadgeCaseHTML === 'function' ? renderBadgeCaseHTML() : ''}
-        </div>
-        <div class="collector-insight-grid">
-          ${insightCard('Vault signal', topGenre ? topGenre[0] : 'building', topGenre ? `${topGenre[1]} cards anchor the collection.` : 'Claim a few cards to reveal your strongest lane.', 'Vault signal')}
-          ${insightCard('Era gravity', topEra ? topEra[0] : 'open', topEra ? `${topEra[1]} cards keep pulling from this era.` : 'Era trends will appear after a few more claims.', 'Era gravity')}
-          ${insightCard('Mood map', topMood ? topMood[0] : 'unset', topMood ? `${topMood[1]} cards are tagged this way.` : 'Tag moods on card backs to unlock this layer.', 'Mood map')}
-          ${insightCard('This week', `${thisWeek} card${thisWeek !== 1 ? 's' : ''}`, diffText, 'Weekly collector rhythm')}
-          ${insightCard('Most revisited', revisitLeader ? revisitLeader.title : 'none yet', revisitLeader ? `${revisitLeader.viewCount || 0} views so far.` : 'Open card detail a few times to reveal your repeat reach.', 'Most revisited')}
-          ${insightCard('Most shared', shareLeader && (shareLeader.sharedCount || 0) > 0 ? shareLeader.title : 'none yet', shareLeader && (shareLeader.sharedCount || 0) > 0 ? `${shareLeader.sharedCount} share${shareLeader.sharedCount !== 1 ? 's' : ''} logged.` : 'Sharing a card or deck will surface here.', 'Most shared')}
-        </div>
-      `;
-    }
-  }
-
-  if (false && insightsEl && allCards.length > 0) {
-    let insightsHtml = '';
-
-    // Top Genres bar chart
-    const genreCounts = {};
-    allCards.forEach(c => { if (c.genre) genreCounts[c.genre] = (genreCounts[c.genre] || 0) + 1; });
-    const topGenres = Object.entries(genreCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const maxGenre = topGenres.length > 0 ? topGenres[0][1] : 1;
-
-    if (topGenres.length > 0) {
-      insightsHtml += `<div class="insights-section">
-        <div class="insights-title">Top Genres</div>
-        <div class="genre-bar-chart">${topGenres.map(g => `
-          <div class="genre-bar-row">
-            <span class="genre-bar-label">${escHtml(g[0])}</span>
-            <div class="genre-bar-track"><div class="genre-bar-fill" style="width:${Math.round(g[1]/maxGenre*100)}%"></div></div>
-            <span class="genre-bar-count">${g[1]}</span>
-          </div>`).join('')}
-        </div>
-      </div>`;
-    }
-
-    // Decade spread
-    const decadeCounts = {};
-    allCards.forEach(c => { if (c.era) decadeCounts[c.era] = (decadeCounts[c.era] || 0) + 1; });
-    const decades = Object.entries(decadeCounts).sort();
-    if (decades.length > 0) {
-      const maxDec = Math.max(...decades.map(d => d[1]));
-      insightsHtml += `<div class="insights-section">
-        <div class="insights-title">Decades</div>
-        <div class="decade-pills">${decades.map(d => `<span class="decade-pill" style="opacity:${0.4 + 0.6 * d[1]/maxDec};">${d[0]} (${d[1]})</span>`).join('')}</div>
-      </div>`;
-    }
-
-    // Mood map
-    const moodCounts = {};
-    allCards.forEach(c => { if (c.mood) moodCounts[c.mood] = (moodCounts[c.mood] || 0) + 1; });
-    const topMoods = Object.entries(moodCounts).sort((a,b) => b[1]-a[1]).slice(0,3);
-    if (topMoods.length > 0) {
-      insightsHtml += `<div class="insights-section">
-        <div class="insights-title">Mood Map</div>
-        <div class="mood-map-row">${topMoods.map(m => `<div class="mood-map-item"><div class="mood-map-label">${escHtml(m[0])}</div><div class="mood-map-count">${m[1]} card${m[1]!==1?'s':''}</div></div>`).join('')}</div>
-      </div>`;
-    } else {
-      insightsHtml += `<div class="insights-section">
-        <div class="insights-title">Mood Map</div>
-        <p style="font-size:var(--text-xs);color:var(--color-text-tertiary);">Tag your first mood from the card back</p>
-      </div>`;
-    }
-
-    // This week vs last week
-    const now = new Date();
-    const weekAgo = new Date(now - 7*86400000);
-    const twoWeekAgo = new Date(now - 14*86400000);
-    const thisWeek = allCards.filter(c => new Date(c.createdAt) >= weekAgo).length;
-    const lastWeek = allCards.filter(c => { const d = new Date(c.createdAt); return d >= twoWeekAgo && d < weekAgo; }).length;
-    const diff = thisWeek - lastWeek;
-    const diffText = diff > 0 ? `↑ ${diff} more than last week` : diff < 0 ? `↓ ${Math.abs(diff)} fewer than last week` : 'Same as last week';
-    insightsHtml += `<div class="insights-section">
-      <div class="insights-title">This Week</div>
-      <div class="this-week-stat">${thisWeek} card${thisWeek!==1?'s':''} added · ${diffText}</div>
-    </div>`;
-
-    insightsEl.innerHTML = insightsHtml;
-  }
-  // Most Heard (top 3)
-  const topHeard = [...allCards].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 3).filter(c => c.viewCount > 0);
-  const mostHeardSection = document.getElementById('mostHeardSection');
-  const mostHeardList = document.getElementById('mostHeardList');
-  if (topHeard.length > 0 && mostHeardSection && mostHeardList) {
-    mostHeardSection.style.display = 'block';
-    mostHeardList.innerHTML = topHeard.map(c => `
-      <div class="most-heard-item" onclick="openCardDetail('${c.id}')">
-        <img class="most-heard-art" src="${getArtUrl(c.coverArtUrl, 100)}" alt="" loading="lazy">
-        <div class="most-heard-info">
-          <div class="title">${escHtml(c.title)}</div>
-          <div class="meta">${escHtml(c.artist)} · ${c.viewCount} view${c.viewCount!==1?'s':''}</div>
-        </div>
+  const statsGrid = document.getElementById('statsGrid');
+  if (statsGrid) {
+    statsGrid.innerHTML = `
+      <div class="stat-card" onclick="openProfileInsight('Cards Collected')">
+        <div class="stat-value">${totalCards}</div>
+        <div class="stat-label">cards</div>
       </div>
-    `).join('');
-  } else if (mostHeardSection) {
-    mostHeardSection.style.display = 'none';
+      <div class="stat-card" onclick="openProfileInsight('Decks Created')">
+        <div class="stat-value">${manualDecks}</div>
+        <div class="stat-label">decks</div>
+      </div>
+      <div class="stat-card" onclick="openProfileInsight('Total Playtime')">
+        <div class="stat-value">${listenStr}</div>
+        <div class="stat-label">heard</div>
+      </div>
+      <div class="stat-card" onclick="openProfileInsight('Favorites')">
+        <div class="stat-value">${favCount}</div>
+        <div class="stat-label">faves</div>
+      </div>
+    `;
+  }
+
+  // Insights
+  const insights = document.getElementById('profileInsights');
+  if (insights) {
+    insights.innerHTML = `
+      <div class="collector-dossier">
+        <div class="collector-dossier-label">Collector Archetype</div>
+        <div class="collector-dossier-copy">You gravitate towards ${totalCards > 10 ? 'expansive collections' : 'curated moments'}. Your ear is tuned to ${favCount > 0 ? 'emotional highlights' : 'new discoveries'}.</div>
+      </div>
+    `;
   }
 
   // Wishlist
-  const wSection = document.getElementById('wishlistSection');
-  if (wSection) {
-    if (allWishlist && allWishlist.length > 0) {
-      wSection.style.display = 'block';
-      const listHtml = allWishlist.map(w => `
-        <div class="most-heard-item">
-          <div class="cover"><img src="${w.coverArtUrl}" alt="" loading="lazy"></div>
-          <div class="info">
-            <div class="title">${escHtml(w.title)}</div>
-            <div class="meta">${escHtml(w.artist)}</div>
+  const wishlistSection = document.getElementById('wishlistSection');
+  const wishlistList = document.getElementById('wishlistList');
+  if (wishlistSection && wishlistList) {
+    if (allWishlist.length > 0) {
+      wishlistSection.style.display = 'block';
+      wishlistList.innerHTML = allWishlist.slice(0, 5).map(c => `
+        <div class="most-heard-item" onclick="showTrackDetailById('${c.id}', { wishlist: true })">
+          <div class="most-heard-rank">★</div>
+          <img src="${c.coverArtUrl}" alt="${escHtml(c.title)}">
+          <div class="most-heard-info">
+            <div class="most-heard-name">${escHtml(c.title)}</div>
+            <div class="most-heard-artist">${escHtml(c.artist)}</div>
           </div>
         </div>
       `).join('');
-      document.getElementById('wishlistList').innerHTML = listHtml;
     } else {
-      wSection.style.display = 'none';
+      wishlistSection.style.display = 'none';
     }
   }
 
-  // Friends & Trades
-  const friendsListEl = document.getElementById('friendsListContent');
-  if (friendsListEl) {
-    if (allFriends.length > 0) {
-      friendsListEl.innerHTML = `
-        <div class="profile-section-title" style="font-size:var(--text-xs); margin-bottom:8px; opacity:0.6;">Your Circle</div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          ${allFriends.map(f => `
-            <div class="collector-dossier" style="margin-top:0; padding:12px; display:flex; justify-content:space-between; align-items:center;">
-              <div>
-                <div style="font-weight:600; font-size:var(--text-sm); color:var(--color-gold);">${f.id}</div>
-                <div style="font-size:var(--text-xs); opacity:0.7;">${f.handle || 'Level 1 Collector'}</div>
-              </div>
-              <button onclick="proposeTradeWith('${f.id}')" style="background:var(--color-surface-raised); color:var(--color-text-primary); border:1px solid var(--color-border); border-radius:6px; padding:4px 12px; font-size:var(--text-xs); cursor:pointer;">Trade</button>
+  // Friends & Active Trades
+  const tradeNetworkContent = document.getElementById('tradeNetworkContent');
+  if (tradeNetworkContent) {
+    const activeFriends = allFriends || [];
+    const activeTrades = (allTrades || []).filter(t => t.status === 'pending');
+
+    let html = `
+      <div class="collector-dossier" style="margin-top:0;">
+        <div class="collector-dossier-label">Your Circle (${activeFriends.length})</div>
+        <div class="friends-list" style="display:flex; gap:12px; overflow-x:auto; padding:8px 0;">
+          ${activeFriends.map(f => `
+            <div class="friend-avatar" onclick="proposeTradeWith('${f.collectorId}')" style="width:48px; height:48px; border-radius:50%; background:var(--color-surface-raised); border:2px solid var(--color-gold); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; position:relative;">
+              <span style="font-size:10px; font-weight:700;">${f.collectorId.split('-')[1].substring(0,2)}</span>
             </div>
           `).join('')}
+          <div class="add-friend-btn" onclick="document.getElementById('friendIdInput').focus()" style="width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px dashed var(--color-border); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
         </div>
-      `;
-    } else {
-      friendsListEl.innerHTML = '';
-    }
-  }
+      </div>
+    `;
 
-  const activeTradesEl = document.getElementById('activeTradesContent');
-  if (activeTradesEl) {
-    const pendingTrades = allTrades.filter(t => t.status === 'pending');
-    if (pendingTrades.length > 0) {
-      activeTradesEl.innerHTML = `
-        <div class="profile-section-title" style="font-size:var(--text-xs); margin-bottom:8px; opacity:0.6;">Pending Trades</div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-          ${pendingTrades.map(t => `
-            <div class="collector-dossier" style="margin-top:0; border:1px solid var(--color-gold); background:rgba(201,168,76,0.05);">
-              <div style="font-size:var(--text-xs); font-weight:600; color:var(--color-gold); margin-bottom:var(--space-2);">INCOMING PROPOSAL</div>
-              <div style="display:flex; gap:12px; align-items:center;">
+    if (activeTrades.length > 0) {
+      html += `
+        <div class="collector-dossier" style="margin-top:var(--space-4);">
+          <div class="collector-dossier-label">Trade Proposals (${activeTrades.length})</div>
+          <div class="pending-trades-list">
+            ${activeTrades.map(t => `
+              <div class="trade-item" style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:12px; margin-bottom:8px;">
                 <div style="flex:1;">
-                  <div style="font-size:var(--text-xs); opacity:0.7; margin-bottom:2px;">Offer</div>
-                  <div style="font-weight:600; font-size:var(--text-sm);">${escHtml(t.offerTitle)}</div>
+                  <div style="font-size:var(--text-xs); opacity:0.6;">FROM ${t.fromCollectorId}</div>
+                  <div style="font-size:var(--text-sm); font-weight:600;">Offer: ${t.offer.trackName}</div>
+                  <div style="font-size:var(--text-xs); color:var(--color-gold);">Request: ${t.request.trackName}</div>
                 </div>
-                <div style="font-size:12px; opacity:0.5;">⇄</div>
-                <div style="flex:1;">
-                  <div style="font-size:var(--text-xs); opacity:0.7; margin-bottom:2px;">Claiming</div>
-                  <div style="font-weight:600; font-size:var(--text-sm);">${escHtml(t.requestTitle)}</div>
+                <div style="display:flex; gap:8px;">
+                  <button onclick="respondToTrade('${t.id}', 'accepted')" style="padding:6px 12px; background:var(--color-gold); color:black; border-radius:60px; font-size:10px; font-weight:700;">Accept</button>
+                  <button onclick="respondToTrade('${t.id}', 'rejected')" style="padding:6px 12px; background:rgba(255,255,255,0.1); color:white; border-radius:60px; font-size:10px; font-weight:700;">Decline</button>
                 </div>
               </div>
-              <div style="display:flex; gap:8px; margin-top:var(--space-3);">
-                <button onclick="respondToTrade('${t.id}', 'accepted')" style="flex:1; background:var(--color-gold); color:black; border:none; border-radius:6px; padding:8px; font-size:var(--text-xs); font-weight:600; cursor:pointer;">Accept</button>
-                <button onclick="respondToTrade('${t.id}', 'declined')" style="flex:1; background:var(--color-surface-raised); color:var(--color-text-primary); border:1px solid var(--color-border); border-radius:6px; padding:8px; font-size:var(--text-xs); cursor:pointer;">Decline</button>
-              </div>
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
         </div>
       `;
-    } else {
-      activeTradesEl.innerHTML = '';
     }
+    tradeNetworkContent.innerHTML = html;
   }
-
-  // Top Artists
-  const artistCounts = {};
-  allCards.forEach(c => { artistCounts[c.artist] = (artistCounts[c.artist] || 0) + 1; });
-  const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  const artistListenMs = {};
-  allCards.forEach(c => { artistListenMs[c.artist] = (artistListenMs[c.artist] || 0) + (c.previewListenMs || 0); });
-
-  const artistSection = document.getElementById('topArtistsSection');
-  const artistList = document.getElementById('topArtistsList');
-  if (topArtists.length > 0) {
-    artistSection.style.display = 'block';
-    artistList.innerHTML = topArtists.map((a, i) => {
-      const lMs = artistListenMs[a[0]] || 0;
-      const lStr = lMs >= 60000 ? Math.floor(lMs/60000) + 'm' : '';
-      return `<div class="top-list-item">
-        <span class="top-list-rank" ${i===0?'style="color:var(--color-gold);"':''}>${i + 1}</span>
-        <span class="top-list-name">${escHtml(a[0])}</span>
-        <span class="top-list-count">${a[1]} card${a[1] !== 1 ? 's' : ''}${lStr ? ' · ' + lStr : ''}</span>
-      </div>`;
-    }).join('');
-  } else {
-    artistSection.style.display = 'none';
-  }
-
-  // Top Genres  (keep, already handled in insights but also show list)
-  const genreSection = document.getElementById('topGenresSection');
-  const genreList = document.getElementById('topGenresList');
-  genreSection.style.display = 'none'; // Handled by insights bar chart now
 
   // Activity timeline
   renderActivityTimeline();
+
+  // Reputation & Bio Edit — Hook into handle display
+  if (handle && !document.getElementById('profileRep')) {
+    const rep = document.createElement('div');
+    rep.id = 'profileRep';
+    rep.style.fontSize = 'var(--text-xs)';
+    rep.style.marginTop = '4px';
+    rep.innerHTML = `<span style="color:var(--color-gold); font-weight:700;">★ TOP TRADER</span> · <span style="opacity:0.6;">Local Circle Verified</span>`;
+    handle.parentNode.insertBefore(rep, handle.nextSibling);
+  }
 }
 
 async function renderActivityTimeline() {
@@ -8293,6 +8208,7 @@ function toggleSettings() {
 function openSettingsModal() {
   const overlay = document.getElementById('settingsModalOverlay');
   document.getElementById('settingsModalHandle').value = settings?.handle || '';
+  document.getElementById('settingsModalBio').value = settings?.bio || '';
   document.getElementById('settingsModalStreaming').value = settings?.defaultStreamingService || 'apple-music';
   overlay.classList.add('show');
 }
@@ -8317,6 +8233,9 @@ async function addFriendById() {
   await refreshData();
   renderProfile();
   input.value = '';
+  
+  logCommunityEvent(`added ${id} to their circle!`);
+  
   showToast(`Added ${id} to your circle!`);
 
   // Simulate an incoming trade request from the AI collector
@@ -8365,8 +8284,205 @@ async function respondToTrade(tradeId, action) {
   renderProfile();
 }
 
+const MOCK_FRIEND_DATA = {
+  'HD-SIM1': [
+    { id: 'sim-1', title: 'Starboy', artist: 'The Weeknd', album: 'Starboy', year: 2016, genre: 'Pop', coverArtUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4a/51/a2/4a51a257-798c-87b4-3079-2a912891147a/16UMGIM50146.rgb.jpg/600x600bb.jpg' },
+    { id: 'sim-2', title: 'Nights', artist: 'Frank Ocean', album: 'Blonde', year: 2016, genre: 'Pop', coverArtUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/09/2d/a8/092da8d5-917c-a492-563b-60a66d03a1f2/683935212588.jpg/600x600bb.jpg' },
+    { id: 'sim-3', title: 'Good Days', artist: 'SZA', album: 'SOS', year: 2020, genre: 'R&B/Soul', coverArtUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/3d/8c/ec/3d8cec71-3323-8633-1463-747863147a4a/194398438128.jpg/600x600bb.jpg' },
+    { id: 'sim-4', title: 'HUMBLE.', artist: 'Kendrick Lamar', album: 'DAMN.', year: 2017, genre: 'Hip-Hop/Rap', coverArtUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/3c/64/00/3c6400a4-3580-5a3d-4a1d-720138403d1a/00602557551468.rgb.jpg/600x600bb.jpg' }
+  ]
+};
+
+function getMockFriendCollection(friendId) {
+  return MOCK_FRIEND_DATA[friendId] || [];
+}
+
 function proposeTradeWith(friendId) {
-  showToast(`Propose Trade logic coming in Phase 3C with ${friendId}`, 'gold');
+  const overlay = document.getElementById('tradeOverlay');
+  const friendData = allFriends.find(f => f.id === friendId) || { id: friendId, handle: 'Unknown' };
+  
+  document.getElementById('tradeFriendName').textContent = friendData.handle || friendId;
+  
+  // Update My Offer List (Only duplicates if possible, or all tradeable)
+  const duplicates = allCards.filter(c => c.tradeEligible && c.isDuplicate);
+  const tradeable = duplicates.length > 0 ? duplicates : allCards.filter(c => c.tradeEligible);
+  
+  const myOfferList = document.getElementById('myOfferList');
+  if (tradeable.length === 0) {
+    myOfferList.innerHTML = '<div style="font-size:var(--text-xs); opacity:0.5; text-align:center; padding:var(--space-4);">No tradeable cards found.</div>';
+  } else {
+    myOfferList.innerHTML = tradeable.map(c => `
+      <div class="trade-track-item" onclick="selectTradeOffer('${c.id}')" data-id="${c.id}">
+        <img src="${c.coverArtUrl}" alt="">
+        <div class="info">
+          <div class="title">${escHtml(c.title)}</div>
+          <div class="artist">${escHtml(c.artist)}</div>
+        </div>
+        ${c.isDuplicate ? '<div class="dup-badge">DUP</div>' : ''}
+      </div>
+    `).join('');
+  }
+
+  // Update Their Request List (Mock collection)
+  const friendCards = getMockFriendCollection(friendId);
+  const theirRequestList = document.getElementById('theirRequestList');
+  if (friendCards.length === 0) {
+    theirRequestList.innerHTML = '<div style="font-size:var(--text-xs); opacity:0.5; text-align:center; padding:var(--space-4);">Collection private or empty.</div>';
+  } else {
+    theirRequestList.innerHTML = friendCards.map(c => `
+      <div class="trade-track-item" onclick="selectTradeRequest('${c.id}')" data-id="${c.id}">
+        <img src="${c.coverArtUrl}" alt="">
+        <div class="info">
+          <div class="title">${escHtml(c.title)}</div>
+          <div class="artist">${escHtml(c.artist)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window._activeTradeFriendId = friendId;
+  window._selectedOfferId = null;
+  window._selectedRequestId = null;
+  document.getElementById('sendTradeBtn').disabled = true;
+
+  overlay.classList.add('show');
+}
+
+function selectTradeOffer(id) {
+  document.querySelectorAll('#myOfferList .trade-track-item').forEach(el => el.classList.remove('selected'));
+  const selected = document.querySelector(`#myOfferList .trade-track-item[data-id="${id}"]`);
+  if (selected) selected.classList.add('selected');
+  window._selectedOfferId = id;
+  checkTradeSelection();
+}
+
+function selectTradeRequest(id) {
+  document.querySelectorAll('#theirRequestList .trade-track-item').forEach(el => el.classList.remove('selected'));
+  const selected = document.querySelector(`#theirRequestList .trade-track-item[data-id="${id}"]`);
+  if (selected) selected.classList.add('selected');
+  window._selectedRequestId = id;
+  checkTradeSelection();
+}
+
+function checkTradeSelection() {
+  document.getElementById('sendTradeBtn').disabled = !(window._selectedOfferId && window._selectedRequestId);
+}
+
+async function sendTradeProposal() {
+  const friendId = window._activeTradeFriendId;
+  const offerCard = allCards.find(c => c.id === window._selectedOfferId);
+  const friendCards = getMockFriendCollection(friendId);
+  const requestCard = friendCards.find(c => c.id === window._selectedRequestId);
+
+  if (!offerCard || !requestCard) return;
+
+  const trade = {
+    id: uuid(),
+    fromId: settings.collectorId,
+    toId: friendId,
+    offerCardId: offerCard.id,
+    offerTitle: offerCard.title,
+    offerArtist: offerCard.artist,
+    offerCover: offerCard.coverArtUrl,
+    requestCardId: requestCard.id,
+    requestTitle: requestCard.title,
+    requestArtist: requestCard.artist,
+    requestCover: requestCard.coverArtUrl,
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  await dbPut('trades', trade);
+  await refreshData();
+  renderProfile();
+  closeTradeOverlay();
+  showToast('Trade proposal sent!', 'gold');
+
+  // If it's the SIM, let's auto-respond after a delay
+  if (friendId === 'HD-SIM1') {
+    setTimeout(async () => {
+      const all = await dbGetAll('trades');
+      const t = all.find(x => x.id === trade.id);
+      if (t && t.status === 'pending') {
+        t.status = 'accepted';
+        await dbPut('trades', t);
+        
+        // Mock ownership swap logic
+        const cardRecord = { ...requestCard, id: uuid(), createdAt: new Date().toISOString(), tradeEligible: true, addedVia: 'trade', isDuplicate: false };
+        await dbPut('cards', cardRecord);
+        await dbDelete('cards', offerCard.id);
+        
+        await refreshData();
+        renderProfile();
+        renderCollection();
+        showToast('Trade Accepted Content added!', 'success');
+      }
+    }, 4000);
+  }
+}
+
+function closeTradeOverlay() {
+  document.getElementById('tradeOverlay').classList.remove('show');
+}
+
+const MOCK_COMMUNITY_EVENTS = [
+  { id: 1, user: 'HD-SIM1', handle: 'AI Collector', type: 'badge', data: { badge: 'HOLOGRAPHIC', track: 'Starboy' }, time: '2m ago' },
+  { id: 2, user: 'HD-GHOST', handle: 'VaporDave', type: 'wishlist', data: { track: 'Blinding Lights' }, time: '15m ago' },
+  { id: 3, user: 'HD-SIM1', handle: 'AI Collector', type: 'collection', data: { track: 'Nights' }, time: '1h ago' }
+];
+
+async function renderCommunityFeed() {
+  const feedList = document.getElementById('communityFeedList');
+  if (!feedList) return;
+
+  // Real events from DB + Mock
+  const realEvents = await dbGetAll('events') || [];
+  const allEvents = [...realEvents.filter(e => e.type === 'community').reverse(), ...MOCK_COMMUNITY_EVENTS];
+
+  feedList.innerHTML = allEvents.map(ev => {
+    let copy = '';
+    let chip = '';
+    
+    if (ev.type === 'badge') {
+      copy = `earned the <span style="color:var(--color-gold); font-weight:700;">${ev.data.badge}</span> badge!`;
+    } else if (ev.type === 'wishlist') {
+      copy = `added <span style="font-weight:600;">${ev.data.track}</span> to their wishlist.`;
+    } else if (ev.type === 'collection') {
+      copy = `just claimed <span style="font-weight:600;">${ev.data.track}</span>!`;
+    } else if (ev.type === 'community') {
+      copy = ev.data.msg;
+    }
+
+    if (ev.data.trackCover) {
+      chip = `<div class="feed-track-chip"><img src="${ev.data.trackCover}"><span>${escHtml(ev.data.track)}</span></div>`;
+    }
+
+    return `
+      <div class="feed-item">
+        <div class="feed-avatar">${(ev.handle || ev.user || '?').charAt(0).toUpperCase()}</div>
+        <div class="feed-content">
+          <div class="feed-user">${escHtml(ev.handle || ev.user)}</div>
+          <div class="feed-copy">${copy}</div>
+          ${chip}
+          <div class="feed-meta">${ev.time || 'just now'}</div>
+        </div>
+      </div>
+    `;
+  }).slice(0, 10).join('');
+}
+
+async function logCommunityEvent(msg, data = {}) {
+  const ev = {
+    id: uuid(),
+    type: 'community',
+    user: 'YOU',
+    handle: settings.handle || 'Guest Collector',
+    data: { msg, ...data },
+    time: 'just now',
+    timestamp: new Date().toISOString()
+  };
+  await dbPut('events', ev);
+  if (currentTab === 'search') renderCommunityFeed();
 }
 
 function showToast(msg, type = 'info') {
@@ -8393,17 +8509,26 @@ function closeSettingsModal() {
 }
 function saveSettingsFromModal() {
   const handle = document.getElementById('settingsModalHandle').value.trim();
+  const bio = document.getElementById('settingsModalBio').value.trim();
   const streaming = document.getElementById('settingsModalStreaming').value;
   settings.handle = handle;
+  settings.bio = bio;
   settings.defaultStreamingService = streaming;
   dbPut('settings', settings);
   // Sync to existing settings UI
   const hi = document.getElementById('handleInput');
   if (hi) hi.value = handle;
+  const bi = document.getElementById('profileBioInput');
+  if (bi) bi.value = bio;
+  const bd = document.getElementById('profileBio');
+  if (bd) bd.value = bio;
   const ss = document.getElementById('streamingSelect');
   if (ss) ss.value = streaming;
   const ph = document.getElementById('profileHandle');
   if (ph) ph.textContent = handle ? `@${handle}` : '';
+  
+  closeSettingsModal();
+  showToast('Settings saved', 'success');
 }
 
 // ── EXPORT ──
@@ -9372,6 +9497,42 @@ init().catch(e => {
   </div>
 
 
+
+  <!-- Trade Proposal Modal -->
+  <div class="trade-overlay" id="tradeOverlay">
+    <div class="trade-sheet">
+      <div class="trade-header">
+        <span class="trade-title">Propose Trade</span>
+        <button class="trade-close-btn" onclick="closeTradeOverlay()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div style="font-size:var(--text-sm); margin-bottom:var(--space-6); opacity:0.8;">
+        Trading with <span id="tradeFriendName" style="color:var(--color-gold); font-weight:700;"></span>
+      </div>
+
+      <div class="trade-grid">
+        <div>
+          <div class="trade-column-title">Your Offer</div>
+          <div class="trade-track-list" id="myOfferList"></div>
+        </div>
+        <div>
+          <div class="trade-column-title">Their Collection</div>
+          <div class="trade-track-list" id="theirRequestList"></div>
+        </div>
+      </div>
+
+      <div class="trade-footer">
+        <button class="send-trade-btn" id="sendTradeBtn" onclick="sendTradeProposal()" disabled>Send Trade Proposal</button>
+        <div style="font-size:10px; opacity:0.5; text-align:center; line-height:1.4;">
+          Trades between collectors are final. <br>
+          Select one card from each side to continue.
+        </div>
+      </div>
+    </div>
+  </div>
+
 <!-- Settings Modal -->
 <div class="settings-modal-overlay" id="settingsModalOverlay" onclick="if(event.target===this)closeSettingsModal()">
   <div class="settings-modal-sheet">
@@ -9384,6 +9545,10 @@ init().catch(e => {
     <div class="settings-modal-item">
       <span class="label">Handle</span>
       <input type="text" id="settingsModalHandle" placeholder="@yourname" maxlength="30" onchange="saveSettingsFromModal()">
+    </div>
+    <div class="settings-modal-item">
+      <span class="label">Bio</span>
+      <textarea id="settingsModalBio" placeholder="Tell other collectors about your taste..." style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--color-border); border-radius:8px; color:white; padding:8px; font-size:var(--text-sm); font-family:inherit; resize:none; margin-top:4px;" rows="3" onchange="saveSettingsFromModal()"></textarea>
     </div>
     <div class="settings-modal-item">
       <span class="label">Default Streaming</span>
